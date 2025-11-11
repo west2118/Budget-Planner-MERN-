@@ -1,7 +1,16 @@
 import { CreditCard, Edit, Trash2 } from "lucide-react";
 import { accountColor } from "../../lib/constants";
+import type { CardType } from "../../lib/types";
 
-const CardsCard = ({ card }: { card: any }) => {
+const CardsCard = ({
+  card,
+  handleSelectCard,
+  handleSelectedIdCard,
+}: {
+  card: any;
+  handleSelectCard: (card: CardType) => void;
+  handleSelectedIdCard: (card: CardType) => void;
+}) => {
   const assignedColor = accountColor.find((color) => color.name === card.type);
 
   return (
@@ -83,11 +92,15 @@ const CardsCard = ({ card }: { card: any }) => {
 
         {/* Action Buttons */}
         <div className="flex space-x-2 mt-4 pt-4 border-t border-gray-100">
-          <button className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors text-sm">
+          <button
+            onClick={() => handleSelectCard(card)}
+            className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors text-sm">
             <Edit className="w-4 h-4" />
             <span>Edit</span>
           </button>
-          <button className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors text-sm">
+          <button
+            onClick={() => handleSelectedIdCard(card)}
+            className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors text-sm">
             <Trash2 className="w-4 h-4" />
             <span>Delete</span>
           </button>

@@ -6,17 +6,32 @@ import { fetchData } from "../../lib/utils";
 import type { CardType } from "../../lib/types";
 import SummaryCards from "../../components/cards/SummaryCards";
 import { useState } from "react";
-import CreateCardModal from "../../components/cards/CreateCardModal";
+import FormDataCardModal from "../../components/cards/FormDataCardModal";
+import DeleteCardModal from "../../components/cards/DeleteCardModal";
 
 const CardsPage = () => {
   const token = useUserStore((state) => state.userToken);
+  const [isEdit, setIsEdit] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const { data, error, isLoading } = useQuery<CardType[]>({
     queryKey: ["user-cards"],
     queryFn: fetchData("http://localhost:8080/api/v1/card", token),
     enabled: !!token,
   });
+
+  const handleSelectCard = (card: CardType) => {
+    setIsEdit(true);
+    setIsModalOpen(true);
+    setSelectedCard(card);
+  };
+
+  const handleSelectedIdCard = (card: CardType) => {
+    setIsDeleteModalOpen(true);
+    setSelectedCard(card);
+  };
 
   return (
     <div className="p-6">
@@ -45,15 +60,31 @@ const CardsPage = () => {
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
         {data?.map((card) => (
-          <CardsCard key={card._id} card={card} />
+          <CardsCard
+            key={card._id}
+            card={card}
+            handleSelectCard={handleSelectCard}
+            handleSelectedIdCard={handleSelectedIdCard}
+          />
         ))}
       </div>
 
       {isModalOpen && (
-        <CreateCardModal
+        <FormDataCardModal
           isModalOpen={isModalOpen}
           isCloseModal={() => setIsModalOpen(false)}
           token={token}
+          isEdit={isEdit}
+          selectedCard={selectedCard}
+        />
+      )}
+
+      {isDeleteModalOpen && (
+        <DeleteCardModal
+          token={token}
+          isModalOpen={isDeleteModalOpen}
+          isCloseModal={() => setIsDeleteModalOpen(false)}
+          selectedCard={selectedCard}
         />
       )}
     </div>

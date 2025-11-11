@@ -1,16 +1,19 @@
-import { X } from "lucide-react";
-import { useEffect } from "react";
+import { Loader, X } from "lucide-react";
+import { useEffect, useTransition } from "react";
 import ReactDOM from "react-dom";
 import { cardType } from "../../lib/constants";
 import { useForm } from "../../hooks/useForm";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { CardType } from "../../lib/types";
 
-type CreateCardModalProps = {
+type FormDataCardModalProps = {
   isModalOpen: boolean;
   isCloseModal: () => void;
   token: string | null;
+  isEdit: boolean;
+  selectedCard: CardType | null;
 };
 
 type FormData = {
@@ -20,11 +23,13 @@ type FormData = {
   budgetLimit: string;
 };
 
-const CreateCardModal = ({
+const FormDataCardModal = ({
   isModalOpen,
   isCloseModal,
   token,
-}: CreateCardModalProps) => {
+  isEdit,
+  selectedCard,
+}: FormDataCardModalProps) => {
   const queryClient = useQueryClient();
   const { formData, handleChange, setField } = useForm<FormData>({
     name: "",
@@ -32,6 +37,7 @@ const CreateCardModal = ({
     type: "",
     budgetLimit: "",
   });
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     if (isModalOpen) {
@@ -45,29 +51,51 @@ const CreateCardModal = ({
     };
   }, [isModalOpen]);
 
+  useEffect(() => {
+    if (!selectedCard) return;
+
+    setField("name", selectedCard?.name || "");
+    setField("balance", selectedCard?.balance || "");
+    setField("type", selectedCard?.type || "");
+    setField("budgetLimit", selectedCard?.budgetLimit || "");
+  }, [selectedCard]);
+
   const mutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const res = await axios.post(
-        "http://localhost:8080/api/v1/card",
-        formData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      let res;
+
+      if (isEdit) {
+        if (!selectedCard) return;
+
+        res = await axios.put(
+          `http://localhost:8080/api/v1/card/${selectedCard?._id}`,
+          { formData },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      } else {
+        res = await axios.post("http://localhost:8080/api/v1/card", formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+
       return res.data;
     },
     onSuccess: (response) => {
+      isCloseModal();
       toast.success(response.message);
       queryClient.invalidateQueries({ queryKey: ["user-cards"] });
-      isCloseModal();
     },
     onError: () => {
       toast.error("Something went wrong");
     },
   });
 
-  const handleCreateCard = async (e: any) => {
+  const handleCreateCard = (e: any) => {
     e.preventDefault();
 
-    mutation.mutate(formData);
+    startTransition(async () => mutation.mutate(formData));
   };
 
   const modalRoot = document.getElementById("modal-root");
@@ -79,11 +107,11 @@ const CreateCardModal = ({
       className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-xl shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+        className="bg-white rounded-xl shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto hide-scrollbar">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">
-              Add New Card
+              {isEdit ? "Update Card" : "Add New Card"}
             </h3>
             <button
               onClick={isCloseModal}
@@ -152,6 +180,7 @@ const CreateCardModal = ({
               <input
                 type="number"
                 step="0.01"
+                min={1000}
                 name="budgetLimit"
                 value={formData.budgetLimit}
                 onChange={handleChange}
@@ -167,13 +196,17 @@ const CreateCardModal = ({
             <div className="flex space-x-3 pt-4">
               <button
                 type="button"
+                onClick={isCloseModal}
+                disabled={isPending}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                Add Card
+                disabled={isPending}
+                className="flex items-center justify-center gap-2 flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                {isPending && <Loader className="animate-spin h-5 w-5" />}
+                <span>{isEdit ? "Update Card" : "Add Card"}</span>
               </button>
             </div>
           </form>
@@ -184,4 +217,4 @@ const CreateCardModal = ({
   );
 };
 
-export default CreateCardModal;
+export default FormDataCardModal;

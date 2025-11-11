@@ -19,7 +19,7 @@ const SummaryCards = ({ cards }: { cards: CardType[] | undefined }) => {
           <div>
             <p className="text-gray-600 text-sm font-medium">Total Balance</p>
             <p className="text-2xl font-bold text-gray-900 mt-2">
-              ${totalBalance}
+              ${totalBalance?.toLocaleString()}
             </p>
             <p className="text-green-500 text-sm mt-1 flex items-center">
               <TrendingUp className="w-4 h-4 mr-1" />
@@ -52,7 +52,7 @@ const SummaryCards = ({ cards }: { cards: CardType[] | undefined }) => {
             </p>
           </div>
           <div className="p-3 rounded-full bg-blue-50">
-            <CreditCard className="w-6 h-6 text-blue-500" />
+            <TrendingDown className="w-6 h-6 text-purple-500" />
           </div>
         </div>
       </div>
@@ -71,7 +71,7 @@ const SummaryCards = ({ cards }: { cards: CardType[] | undefined }) => {
             </p>
           </div>
           <div className="p-3 rounded-full bg-purple-50">
-            <TrendingDown className="w-6 h-6 text-purple-500" />
+            <CreditCard className="w-6 h-6 text-blue-500" />
           </div>
         </div>
       </div>
