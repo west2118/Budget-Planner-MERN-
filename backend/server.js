@@ -12,6 +12,7 @@ app.use(express.json());
 
 import userRoutes from "./routes/v1/user.route.js";
 import cardRoutes from "./routes/v1/card.route.js";
+import transactionRoutes from "./routes/v1/transaction.route.js";
 
 const require = createRequire(import.meta.url);
 const serviceAccount = require("./serviceAccountKey.json");
@@ -35,3 +36,4 @@ mongoose
 
 app.use("/api/v1", userRoutes);
 app.use("/api/v1", cardRoutes);
+app.use("/api/v1", transactionRoutes);

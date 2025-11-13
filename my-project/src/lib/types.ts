@@ -20,3 +20,21 @@ export type CardType = {
   updatedAt: string;
   __v: number;
 };
+
+export type TransactionType = {
+  _id: string;
+  userId: string;
+  cardId: {
+    _id: string;
+    name: string;
+  };
+  goalId: string | null;
+  amount: number;
+  category: string;
+  type: "Income" | "Expense";
+  note: string;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+};

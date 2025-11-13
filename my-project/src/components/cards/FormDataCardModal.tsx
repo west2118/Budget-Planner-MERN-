@@ -92,7 +92,7 @@ const FormDataCardModal = ({
     },
   });
 
-  const handleCreateCard = (e: any) => {
+  const handleSubmitCard = (e: any) => {
     e.preventDefault();
 
     startTransition(async () => mutation.mutate(formData));
@@ -120,7 +120,7 @@ const FormDataCardModal = ({
             </button>
           </div>
 
-          <form onSubmit={handleCreateCard} className="space-y-4">
+          <form onSubmit={handleSubmitCard} className="space-y-4">
             {/* Card Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
