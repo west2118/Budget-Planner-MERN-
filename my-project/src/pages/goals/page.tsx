@@ -6,13 +6,16 @@ import {
   DollarSign,
   TrendingUp,
   CheckCircle2,
-  Edit,
-  Trash2,
-  PlusCircle,
 } from "lucide-react";
 import FormDataGoalModal from "../../components/goals/FormDataGoalModal";
+import { useUserStore } from "../../stores/useUserStore";
+import GoalCard from "../../components/goals/GoalCard";
+import { fetchData } from "../../lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import type { GoalType } from "../../lib/types";
 
 const GoalsPage = () => {
+  const token = useUserStore((state) => state.userToken);
   // Static goals data
   const goals = [
     {
@@ -90,6 +93,12 @@ const GoalsPage = () => {
   ];
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { data, error, isLoading } = useQuery<GoalType[]>({
+    queryKey: ["user-goals"],
+    queryFn: fetchData("http://localhost:8080/api/v1/goal", token),
+    enabled: !!token,
+  });
 
   // Calculate totals
   const totalGoals = goals.length;
@@ -198,129 +207,9 @@ const GoalsPage = () => {
 
       {/* Goals Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {goals.map((goal) => {
-          const IconComponent = goal.icon;
-          const daysLeft = Math.ceil(1 / (1000 * 60 * 60 * 24));
-
-          return (
-            <div
-              key={goal.id}
-              className={`bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden ${
-                goal.completed ? "ring-2 ring-emerald-200" : ""
-              }`}>
-              {/* Goal Header */}
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`p-2 rounded-lg ${goal.color} bg-opacity-10`}>
-                      <IconComponent
-                        className={`w-5 h-5 ${goal.color.replace(
-                          "bg-",
-                          "text-"
-                        )}`}
-                      />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {goal.title}
-                      </h3>
-                      <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full mt-1">
-                        {goal.category}
-                      </span>
-                    </div>
-                  </div>
-                  {goal.completed && (
-                    <CheckCircle2 className="w-6 h-6 text-emerald-500 shrink-0" />
-                  )}
-                </div>
-
-                {/* Progress Bar */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Progress</span>
-                    <span className="font-semibold text-gray-900">
-                      {goal.progress}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div
-                      className={`h-3 rounded-full ${goal.color} transition-all duration-500`}
-                      style={{ width: `${goal.progress}%` }}></div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>${goal.currentAmount.toLocaleString()}</span>
-                    <span>${goal.targetAmount.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Goal Details */}
-              <div className="p-6">
-                <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                  <div>
-                    <p className="text-gray-500">Target</p>
-                    <p className="font-semibold text-gray-900">
-                      ${goal.targetAmount.toLocaleString()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Current</p>
-                    <p className="font-semibold text-gray-900">
-                      ${goal.currentAmount.toLocaleString()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Remaining</p>
-                    <p className="font-semibold text-gray-900">
-                      $
-                      {(
-                        goal.targetAmount - goal.currentAmount
-                      ).toLocaleString()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Deadline</p>
-                    <p className="font-semibold text-gray-900">
-                      {new Date(goal.deadline).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Days Left */}
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-4">
-                  <span className="text-sm text-gray-600">Days left</span>
-                  <span
-                    className={`text-sm font-semibold ${
-                      daysLeft < 30 ? "text-red-600" : "text-gray-900"
-                    }`}>
-                    {daysLeft} days
-                  </span>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex space-x-2">
-                  {!goal.completed && (
-                    <button className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm">
-                      <PlusCircle className="w-4 h-4" />
-                      <span>Add Money</span>
-                    </button>
-                  )}
-                  <button className="flex items-center justify-center px-3 py-2 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors text-sm">
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button className="flex items-center justify-center px-3 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors text-sm">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {data?.map((goal) => (
+          <GoalCard key={goal._id} goal={goal} />
+        ))}
       </div>
 
       {/* Add Goal Form Modal (Static) */}
@@ -328,6 +217,9 @@ const GoalsPage = () => {
         <FormDataGoalModal
           isModalOpen={isModalOpen}
           isCloseModal={() => setIsModalOpen(false)}
+          token={token}
+          isEdit={false}
+          selectedGoal={null}
         />
       )}
     </div>

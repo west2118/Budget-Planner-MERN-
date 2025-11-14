@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchData } from "../../lib/utils";
 import TransactionTable from "../../components/transactions/TransactionTable";
 import axios from "axios";
+import type { TransactionType } from "../../lib/types";
 
 // Static transaction data
 const transactions = [
@@ -85,7 +86,10 @@ const transactions = [
 
 const TransactionsPage = () => {
   const token = useUserStore((state) => state.userToken);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TransactionType | null>(null);
+  const [isEdit, setIsEdit] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["transaction-data"],
@@ -109,8 +113,11 @@ const TransactionsPage = () => {
     enabled: !!token,
   });
 
-  console.log(data?.transactions);
-  console.log(data?.cards);
+  const handleEditTransaction = (transaction: TransactionType) => {
+    setIsEdit(true);
+    setIsModalOpen(true);
+    setSelectedTransaction(transaction);
+  };
 
   return (
     <div className="p-6">
@@ -123,7 +130,7 @@ const TransactionsPage = () => {
       </div>
 
       {/* Search and Filter Bar */}
-      <SearchFilterCard handleOpenAddModal={() => setIsAddModalOpen(true)} />
+      <SearchFilterCard handleOpenAddModal={() => setIsModalOpen(true)} />
 
       {/* Export/Import Buttons */}
       <div className="flex justify-between items-center mb-4">
@@ -143,15 +150,20 @@ const TransactionsPage = () => {
       </div>
 
       {/* Transactions Table */}
-      <TransactionTable dataTransactions={data?.transactions} />
+      <TransactionTable
+        dataTransactions={data?.transactions}
+        handleEditTransaction={handleEditTransaction}
+      />
 
       {/* Transaction Form Modal (Static) */}
-      {isAddModalOpen && (
+      {isModalOpen && (
         <FormDataTransaction
           token={token}
-          isModalOpen={isAddModalOpen}
-          isCloseModal={() => setIsAddModalOpen(false)}
+          isModalOpen={isModalOpen}
+          isCloseModal={() => setIsModalOpen(false)}
           dataCards={data?.cards}
+          isEdit={isEdit}
+          selectedTransaction={selectedTransaction}
         />
       )}
     </div>

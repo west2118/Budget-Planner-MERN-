@@ -38,3 +38,17 @@ export type TransactionType = {
   updatedAt: string;
   __v: number;
 };
+
+export type GoalType = {
+  _id: string;
+  userId: string;
+  title: string;
+  description: string;
+  category: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+};

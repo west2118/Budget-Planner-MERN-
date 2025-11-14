@@ -29,7 +29,7 @@ export const postCard = async (req, res) => {
     }
 
     const cardLimit = await Card.countDocuments({ userId: user._id });
-    if (cardLimit >= 7) {
+    if (cardLimit >= 6) {
       return res.status(400).json({ message: "Card limit reached" });
     }
 

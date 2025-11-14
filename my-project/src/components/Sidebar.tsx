@@ -107,7 +107,9 @@ const Sidebar = () => {
             className={`flex items-center space-x-3 ${
               !sidebarOpen && !isMobile && "hidden"
             }`}>
-            <div className="w-8 h-8 bg-blue-500 rounded-lg shrink-0"></div>
+            <div className="w-8 h-8 bg-blue-500 rounded-lg shrink-0 flex items-center justify-center">
+              <Wallet className="h-5 w-5 text-white" />
+            </div>
             <span className="text-xl font-bold text-gray-800 whitespace-nowrap">
               FinTrack
             </span>

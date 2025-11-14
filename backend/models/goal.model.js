@@ -10,7 +10,7 @@ const GoalSchema = mongoose.Schema(
     title: { type: String, required: true },
     category: { type: String, required: true },
     targetAmount: { type: Number, required: true },
-    currentAmount: { type: Number, required: true },
+    currentAmount: { type: Number, default: 0 },
     deadline: { type: Date, required: true },
     description: { type: String, default: "" },
   },
