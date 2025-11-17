@@ -1,18 +1,23 @@
-import { startTransition, useEffect } from "react";
+import { startTransition, useEffect, useState, useTransition } from "react";
 import { useForm } from "../../hooks/useForm";
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import type { CardType, TransactionType } from "../../lib/types";
+import type { CardType, GoalType, TransactionType } from "../../lib/types";
 import Modal from "../ui/Modal";
+import DeleteModal from "../DeleteModal";
+import { Loader } from "lucide-react";
+import { categories } from "../../lib/constants";
 
 type FormDataTransactionProps = {
   isModalOpen: boolean;
   isCloseModal: () => void;
   token: string | null;
   dataCards: CardType[];
+  dataGoals: GoalType[];
   isEdit: boolean;
   selectedTransaction: TransactionType | null;
+  isDelete?: boolean;
 };
 
 type FormData = {
@@ -30,10 +35,13 @@ const FormDataTransaction = ({
   isCloseModal,
   token,
   dataCards,
+  dataGoals,
   isEdit,
   selectedTransaction,
+  isDelete = false,
 }: FormDataTransactionProps) => {
   const queryClient = useQueryClient();
+  const [isPending, startTransition] = useTransition();
   const { formData, handleChange, setField } = useForm<FormData>({
     cardId: "",
     goalId: "",
@@ -64,8 +72,6 @@ const FormDataTransaction = ({
         goalId: formData.goalId || null,
       };
 
-      console.log("Payload Data: ", payload);
-
       let res;
 
       if (isEdit) {
@@ -74,6 +80,15 @@ const FormDataTransaction = ({
         res = await axios.put(
           `http://localhost:8080/api/v1/transaction/${selectedTransaction?._id}`,
           { formData: payload },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      } else if (isDelete) {
+        if (!selectedTransaction) return;
+
+        res = await axios.delete(
+          `http://localhost:8080/api/v1/transaction/${selectedTransaction?._id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -104,6 +119,18 @@ const FormDataTransaction = ({
 
     startTransition(async () => mutation.mutate(formData));
   };
+
+  if (isDelete) {
+    return (
+      <DeleteModal
+        isPending={isPending}
+        header="Transaction"
+        isCloseModal={isCloseModal}
+        content={selectedTransaction?.category ?? ""}
+        handleDelete={handleSubmitTransaction}
+      />
+    );
+  }
 
   return (
     <Modal
@@ -156,20 +183,18 @@ const FormDataTransaction = ({
             <option value="" disabled>
               Select category
             </option>
-            <option value="Food & Dining">Food & Dining</option>
-            <option value="Shopping">Shopping</option>
-            <option value="Transport">Transport</option>
-            <option value="Entertainment">Entertainment</option>
-            <option value="Bills">Bills</option>
-            <option value="Salary">Salary</option>
-            <option value="Freelance">Freelance</option>
+            {categories?.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
           </select>
         </div>
 
         {/* Linked Card */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Linked Card (Optional)
+            Linked Card
           </label>
           <select
             value={formData.cardId}
@@ -198,9 +223,11 @@ const FormDataTransaction = ({
             <option value="" disabled>
               Select goal
             </option>
-            <option value="Emergency Fund">Emergency Fund</option>
-            <option value="New Laptop">New Laptop</option>
-            <option value="Vacation">Vacation</option>
+            {dataGoals?.map((goal) => (
+              <option key={goal._id} value={goal._id}>
+                {goal.title}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -235,14 +262,17 @@ const FormDataTransaction = ({
         {/* Buttons */}
         <div className="flex space-x-3 pt-4">
           <button
+            disabled={isPending}
             onClick={isCloseModal}
             type="button"
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
             Cancel
           </button>
           <button
+            disabled={isPending}
             type="submit"
-            className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+            className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2">
+            {isPending && <Loader className="animate-spin h-5 w-5" />}
             {isEdit ? "Edit Transaction" : "Add Transaction"}
           </button>
         </div>

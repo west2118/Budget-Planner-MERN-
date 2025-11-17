@@ -14,84 +14,87 @@ import { fetchData } from "../../lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import type { GoalType } from "../../lib/types";
 
+// Static goals data
+const goals = [
+  {
+    id: 1,
+    title: "Emergency Fund",
+    targetAmount: 10000,
+    currentAmount: 6500,
+    progress: 65,
+    deadline: "2024-12-31",
+    category: "Savings",
+    completed: false,
+    color: "bg-blue-500",
+    icon: Target,
+  },
+  {
+    id: 2,
+    title: "New Laptop",
+    targetAmount: 2000,
+    currentAmount: 1200,
+    progress: 60,
+    deadline: "2024-06-30",
+    category: "Electronics",
+    completed: false,
+    color: "bg-green-500",
+    icon: TrendingUp,
+  },
+  {
+    id: 3,
+    title: "Vacation to Japan",
+    targetAmount: 5000,
+    currentAmount: 1500,
+    progress: 30,
+    deadline: "2024-09-15",
+    category: "Travel",
+    completed: false,
+    color: "bg-purple-500",
+    icon: Calendar,
+  },
+  {
+    id: 4,
+    title: "Car Down Payment",
+    targetAmount: 8000,
+    currentAmount: 8000,
+    progress: 100,
+    deadline: "2024-03-31",
+    category: "Vehicle",
+    completed: true,
+    color: "bg-emerald-500",
+    icon: CheckCircle2,
+  },
+  {
+    id: 5,
+    title: "Home Renovation",
+    targetAmount: 15000,
+    currentAmount: 4500,
+    progress: 30,
+    deadline: "2024-11-30",
+    category: "Home",
+    completed: false,
+    color: "bg-orange-500",
+    icon: DollarSign,
+  },
+  {
+    id: 6,
+    title: "Wedding Savings",
+    targetAmount: 20000,
+    currentAmount: 7500,
+    progress: 38,
+    deadline: "2025-06-30",
+    category: "Life Event",
+    completed: false,
+    color: "bg-pink-500",
+    icon: Target,
+  },
+];
+
 const GoalsPage = () => {
   const token = useUserStore((state) => state.userToken);
-  // Static goals data
-  const goals = [
-    {
-      id: 1,
-      title: "Emergency Fund",
-      targetAmount: 10000,
-      currentAmount: 6500,
-      progress: 65,
-      deadline: "2024-12-31",
-      category: "Savings",
-      completed: false,
-      color: "bg-blue-500",
-      icon: Target,
-    },
-    {
-      id: 2,
-      title: "New Laptop",
-      targetAmount: 2000,
-      currentAmount: 1200,
-      progress: 60,
-      deadline: "2024-06-30",
-      category: "Electronics",
-      completed: false,
-      color: "bg-green-500",
-      icon: TrendingUp,
-    },
-    {
-      id: 3,
-      title: "Vacation to Japan",
-      targetAmount: 5000,
-      currentAmount: 1500,
-      progress: 30,
-      deadline: "2024-09-15",
-      category: "Travel",
-      completed: false,
-      color: "bg-purple-500",
-      icon: Calendar,
-    },
-    {
-      id: 4,
-      title: "Car Down Payment",
-      targetAmount: 8000,
-      currentAmount: 8000,
-      progress: 100,
-      deadline: "2024-03-31",
-      category: "Vehicle",
-      completed: true,
-      color: "bg-emerald-500",
-      icon: CheckCircle2,
-    },
-    {
-      id: 5,
-      title: "Home Renovation",
-      targetAmount: 15000,
-      currentAmount: 4500,
-      progress: 30,
-      deadline: "2024-11-30",
-      category: "Home",
-      completed: false,
-      color: "bg-orange-500",
-      icon: DollarSign,
-    },
-    {
-      id: 6,
-      title: "Wedding Savings",
-      targetAmount: 20000,
-      currentAmount: 7500,
-      progress: 38,
-      deadline: "2025-06-30",
-      category: "Life Event",
-      completed: false,
-      color: "bg-pink-500",
-      icon: Target,
-    },
-  ];
-
+  const [selectedGoal, setSelectedGoal] = useState<GoalType | null>(null);
+  const [isEdit, setIsEdit] = useState(false);
+  const [isDelete, setIsDelete] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data, error, isLoading } = useQuery<GoalType[]>({
@@ -99,6 +102,25 @@ const GoalsPage = () => {
     queryFn: fetchData("http://localhost:8080/api/v1/goal", token),
     enabled: !!token,
   });
+
+  const handleEditGoal = (goal: GoalType) => {
+    setIsEdit(true);
+    setIsModalOpen(true);
+    setSelectedGoal(goal);
+  };
+
+  const handleDeleteGoal = (goal: GoalType) => {
+    setIsDelete(true);
+    setIsModalOpen(true);
+    setSelectedGoal(goal);
+  };
+
+  const handleCloseGoal = () => {
+    setSelectedGoal(null);
+    setIsEdit(false);
+    setIsDelete(false);
+    setIsModalOpen(false);
+  };
 
   // Calculate totals
   const totalGoals = goals.length;
@@ -208,7 +230,12 @@ const GoalsPage = () => {
       {/* Goals Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {data?.map((goal) => (
-          <GoalCard key={goal._id} goal={goal} />
+          <GoalCard
+            key={goal._id}
+            goal={goal}
+            handleEditGoal={handleEditGoal}
+            handleDeleteGoal={handleDeleteGoal}
+          />
         ))}
       </div>
 
@@ -216,10 +243,11 @@ const GoalsPage = () => {
       {isModalOpen && (
         <FormDataGoalModal
           isModalOpen={isModalOpen}
-          isCloseModal={() => setIsModalOpen(false)}
+          isCloseModal={handleCloseGoal}
           token={token}
-          isEdit={false}
-          selectedGoal={null}
+          selectedGoal={selectedGoal}
+          isEdit={isEdit}
+          isDelete={isDelete}
         />
       )}
     </div>

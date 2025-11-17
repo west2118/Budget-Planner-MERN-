@@ -33,7 +33,7 @@ export const cardType = [
   { value: "Cash", label: "Cash Wallet" },
 ];
 
-export const categories = [
+export const categoriesGoal = [
   {
     label: "Savings",
     color: "#4CAF50",
@@ -85,3 +85,13 @@ export function getRemainingDays(deadline: string) {
 
   return diffDays < 0 ? 0 : diffDays; // never return negative days
 }
+
+export const categories = [
+  "Food & Dining",
+  "Shopping",
+  "Transport",
+  "Entertainment",
+  "Bills",
+  "Salary",
+  "Freelance",
+];

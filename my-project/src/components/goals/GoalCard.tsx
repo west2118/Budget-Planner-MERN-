@@ -1,11 +1,30 @@
-import { CheckCircle2, Edit, PlusCircle, Trash2 } from "lucide-react";
-import { categories, getRemainingDays } from "../../lib/constants";
+import {
+  CheckCircle2,
+  Edit,
+  MoreVertical,
+  Pencil,
+  PlusCircle,
+  Trash2,
+} from "lucide-react";
+import { categoriesGoal, getRemainingDays } from "../../lib/constants";
 import type { GoalType } from "../../lib/types";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
-const GoalCard = ({ goal }: { goal: GoalType }) => {
+type GoalCardProps = {
+  goal: GoalType;
+  handleEditGoal: (goal: GoalType) => void;
+  handleDeleteGoal: (goal: GoalType) => void;
+};
+
+const GoalCard = ({
+  goal,
+  handleEditGoal,
+  handleDeleteGoal,
+}: GoalCardProps) => {
+  const [isOpenSettings, setIsOpenSettings] = useState(false);
+
   const goalColor = useMemo(
-    () => categories.find((category) => category.label === goal.category),
+    () => categoriesGoal.find((category) => category.label === goal.category),
     [goal.category]
   );
 
@@ -26,13 +45,14 @@ const GoalCard = ({ goal }: { goal: GoalType }) => {
       }`}>
       {/* Goal Header */}
       <div className="p-6 border-b border-gray-100">
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 relative">
           <div className="flex items-center space-x-3">
             <div
               style={{ backgroundColor: goalColor?.color }}
               className="p-2 rounded-lg bg-opacity-10">
               {Icon && <Icon className="w-5 h-5 text-white" />}
             </div>
+
             <div>
               <h3 className="font-semibold text-gray-900">{goal.title}</h3>
               <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full mt-1">
@@ -40,9 +60,39 @@ const GoalCard = ({ goal }: { goal: GoalType }) => {
               </span>
             </div>
           </div>
-          {goalCompleted && (
-            <CheckCircle2 className="w-6 h-6 text-emerald-500 shrink-0" />
-          )}
+
+          {/* Settings Button */}
+          <div className="relative">
+            <button
+              onClick={() => setIsOpenSettings(!isOpenSettings)}
+              className="p-2 rounded-md hover:bg-gray-100">
+              <MoreVertical className="w-5 h-5 text-gray-600" />
+            </button>
+
+            {isOpenSettings && (
+              <div className="absolute right-0 mt-2 w-36 bg-white shadow-lg border border-gray-200 rounded-lg overflow-hidden z-10">
+                <button
+                  onClick={() => {
+                    setIsOpenSettings(false);
+                    handleEditGoal(goal);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm hover:bg-gray-100">
+                  <Pencil className="w-4 h-4 mr-2 text-blue-500" />
+                  Edit
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsOpenSettings(false);
+                    handleDeleteGoal(goal);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm hover:bg-gray-100 text-red-600">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Progress Bar */}
@@ -102,7 +152,7 @@ const GoalCard = ({ goal }: { goal: GoalType }) => {
         </div>
 
         {/* Days Left */}
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-4">
+        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
           <span className="text-sm text-gray-600">Days left</span>
           <span
             className={`text-sm font-semibold ${
@@ -110,22 +160,6 @@ const GoalCard = ({ goal }: { goal: GoalType }) => {
             }`}>
             {remainingDays} days
           </span>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex space-x-2">
-          {!goalCompleted && (
-            <button className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm">
-              <PlusCircle className="w-4 h-4" />
-              <span>Add Money</span>
-            </button>
-          )}
-          <button className="flex items-center justify-center px-3 py-2 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors text-sm">
-            <Edit className="w-4 h-4" />
-          </button>
-          <button className="flex items-center justify-center px-3 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors text-sm">
-            <Trash2 className="w-4 h-4" />
-          </button>
         </div>
       </div>
     </div>

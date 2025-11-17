@@ -90,17 +90,21 @@ const TransactionsPage = () => {
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionType | null>(null);
   const [isEdit, setIsEdit] = useState(false);
+  const [isDelete, setIsDelete] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["transaction-data"],
     queryFn: async () => {
       if (!token) return null;
 
-      const [transactionsRes, cardsRes] = await Promise.all([
+      const [transactionsRes, cardsRes, goalsRes] = await Promise.all([
         axios.get("http://localhost:8080/api/v1/transaction", {
           headers: { Authorization: `Bearer ${token}` },
         }),
         axios.get("http://localhost:8080/api/v1/card", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get("http://localhost:8080/api/v1/goal", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -108,6 +112,7 @@ const TransactionsPage = () => {
       return {
         transactions: transactionsRes.data,
         cards: cardsRes.data,
+        goals: goalsRes.data,
       };
     },
     enabled: !!token,
@@ -117,6 +122,19 @@ const TransactionsPage = () => {
     setIsEdit(true);
     setIsModalOpen(true);
     setSelectedTransaction(transaction);
+  };
+
+  const handleDeleteTransaction = (transaction: TransactionType) => {
+    setIsDelete(true);
+    setIsModalOpen(true);
+    setSelectedTransaction(transaction);
+  };
+
+  const handleCloseTransaction = () => {
+    setSelectedTransaction(null);
+    setIsEdit(false);
+    setIsDelete(false);
+    setIsModalOpen(false);
   };
 
   return (
@@ -153,6 +171,7 @@ const TransactionsPage = () => {
       <TransactionTable
         dataTransactions={data?.transactions}
         handleEditTransaction={handleEditTransaction}
+        handleDeleteTransaction={handleDeleteTransaction}
       />
 
       {/* Transaction Form Modal (Static) */}
@@ -160,10 +179,12 @@ const TransactionsPage = () => {
         <FormDataTransaction
           token={token}
           isModalOpen={isModalOpen}
-          isCloseModal={() => setIsModalOpen(false)}
+          isCloseModal={handleCloseTransaction}
           dataCards={data?.cards}
+          dataGoals={data?.goals}
           isEdit={isEdit}
           selectedTransaction={selectedTransaction}
+          isDelete={isDelete}
         />
       )}
     </div>

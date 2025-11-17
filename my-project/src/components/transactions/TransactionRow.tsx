@@ -4,9 +4,11 @@ import { Edit, Trash2 } from "lucide-react";
 const TransactionRow = ({
   transaction,
   handleEditTransaction,
+  handleDeleteTransaction,
 }: {
   transaction: TransactionType;
   handleEditTransaction: (transaction: TransactionType) => void;
+  handleDeleteTransaction: (transaction: TransactionType) => void;
 }) => {
   console.log(transaction);
 
@@ -45,7 +47,7 @@ const TransactionRow = ({
         {transaction.cardId.name}
       </td>
       <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-        {transaction.note}
+        {transaction.note?.trim() || "———"}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
         <div className="flex space-x-2">
@@ -54,7 +56,9 @@ const TransactionRow = ({
             className="text-blue-600 hover:text-blue-900 transition-colors">
             <Edit className="w-4 h-4" />
           </button>
-          <button className="text-red-600 hover:text-red-900 transition-colors">
+          <button
+            onClick={() => handleDeleteTransaction(transaction)}
+            className="text-red-600 hover:text-red-900 transition-colors">
             <Trash2 className="w-4 h-4" />
           </button>
         </div>

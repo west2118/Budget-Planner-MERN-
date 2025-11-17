@@ -6,9 +6,11 @@ import TransactionRow from "./TransactionRow";
 const TransactionTable = ({
   dataTransactions,
   handleEditTransaction,
+  handleDeleteTransaction,
 }: {
   dataTransactions: TransactionType[];
   handleEditTransaction: (transaction: TransactionType) => void;
+  handleDeleteTransaction: (transaction: TransactionType) => void;
 }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -45,6 +47,7 @@ const TransactionTable = ({
                 key={transaction._id}
                 transaction={transaction}
                 handleEditTransaction={handleEditTransaction}
+                handleDeleteTransaction={handleDeleteTransaction}
               />
             ))}
           </tbody>

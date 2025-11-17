@@ -1,6 +1,24 @@
 import Goal from "../../models/goal.model.js";
 import User from "../../models/user.model.js";
 
+export const getAllUserGoals = async (req, res) => {
+  try {
+    const { uid } = req.user;
+
+    const user = await User.findOne({ uid });
+    if (!user) {
+      return res.status(400).json({ message: "User didn't exist" });
+    }
+
+    const goals = await Goal.find({ userId: user._id });
+
+    res.status(201).json(goals);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 export const getUserGoals = async (req, res) => {
   try {
     const { uid } = req.user;
@@ -58,6 +76,56 @@ export const postGoal = async (req, res) => {
     res.status(200).json({ message: "Goal created successfully!", newGoal });
   } catch (error) {
     console.log(error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const putGoal = async (req, res) => {
+  try {
+    const { uid } = req.user;
+    const { id } = req.params;
+    const { formData } = req.body;
+
+    const user = await User.findOne({ uid });
+    if (!user) {
+      return res.status(400).json({ message: "User didn't exist" });
+    }
+
+    const goal = await Goal.findById(id);
+    if (!goal) {
+      return res.status(400).json({ message: "Goal didn't exist" });
+    }
+
+    await Goal.findByIdAndUpdate(id, { ...formData }, { new: true });
+
+    res.status(200).json({
+      message: "Goal updated successfully!",
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const deleteGoal = async (req, res) => {
+  try {
+    const { uid } = req.user;
+    const { id } = req.params;
+
+    const user = await User.findOne({ uid });
+    if (!user) {
+      return res.status(400).json({ message: "User didn't exist" });
+    }
+
+    const goal = await Goal.findById(id);
+    if (!goal) {
+      return res.status(400).json({ message: "Goal didn't exist" });
+    }
+
+    await Goal.findByIdAndDelete(id);
+
+    res.status(200).json({ message: "Goal deleted successfully!" });
+  } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

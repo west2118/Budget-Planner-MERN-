@@ -3,7 +3,25 @@ import Goal from "../../models/goal.model.js";
 import Transaction from "../../models/transaction.model.js";
 import User from "../../models/user.model.js";
 
-export const getTransaction = async (req, res) => {
+export const getAllUserTransactions = async (req, res) => {
+  try {
+    const { uid } = req.user;
+
+    const user = await User.findOne({ uid });
+    if (!user) {
+      return res.status(400).json({ message: "User didn't exist" });
+    }
+
+    const transactions = await Transaction.find({ userId: user._id });
+
+    res.status(201).json(transactions);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const getUserTransactions = async (req, res) => {
   try {
     const { uid } = req.user;
 
@@ -63,8 +81,8 @@ export const postTransaction = async (req, res) => {
         return res.status(404).json({ message: "Goal not found" });
       }
 
-      if (type === "Income") goal.balance += Number(amount);
-      else if (type === "Expense") goal.balance -= Number(amount);
+      if (type === "Income") goal.currentAmount += Number(amount);
+      else if (type === "Expense") goal.currentAmount -= Number(amount);
 
       await goal.save();
     }
@@ -106,9 +124,9 @@ export const putTransaction = async (req, res) => {
       const oldGoal = await Goal.findById(transaction.goalId);
       if (oldGoal) {
         if (transaction.type === "Income")
-          oldGoal.balance -= Number(transaction.amount);
+          oldGoal.currentAmount -= Number(transaction.amount);
         else if (transaction.type === "Expense")
-          oldGoal.balance += Number(transaction.amount);
+          oldGoal.currentAmount += Number(transaction.amount);
         await oldGoal.save();
       }
     }
@@ -132,9 +150,9 @@ export const putTransaction = async (req, res) => {
         return res.status(404).json({ message: "New goal not found" });
 
       if (formData.type === "Income")
-        newGoal.balance += Number(formData.amount);
+        newGoal.currentAmount += Number(formData.amount);
       else if (formData.type === "Expense")
-        newGoal.balance -= Number(formData.amount);
+        newGoal.currentAmount -= Number(formData.amount);
 
       await newGoal.save();
     }
@@ -170,9 +188,31 @@ export const deleteTransaction = async (req, res) => {
         .json({ message: "You don't have authorized in this card!" });
     }
 
-    await Card.findByIdAndDelete(id);
+    if (transaction.cardId) {
+      const oldCard = await Card.findById(transaction.cardId);
+      if (oldCard) {
+        if (transaction.type === "Income")
+          oldCard.balance -= Number(transaction.amount);
+        else if (transaction.type === "Expense")
+          oldCard.balance += Number(transaction.amount);
+        await oldCard.save();
+      }
+    }
 
-    res.status(200).json({ message: "Card deleted successfully!" });
+    if (transaction.goalId) {
+      const oldGoal = await Goal.findById(transaction.goalId);
+      if (oldGoal) {
+        if (transaction.type === "Income")
+          oldGoal.currentAmount -= Number(transaction.amount);
+        else if (transaction.type === "Expense")
+          oldGoal.currentAmount += Number(transaction.amount);
+        await oldGoal.save();
+      }
+    }
+
+    await Transaction.findByIdAndDelete(id);
+
+    res.status(200).json({ message: "Transaction deleted successfully!" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
