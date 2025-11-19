@@ -87,11 +87,26 @@ export function getRemainingDays(deadline: string) {
 }
 
 export const categories = [
-  "Food & Dining",
-  "Shopping",
-  "Transport",
-  "Entertainment",
-  "Bills",
-  "Salary",
-  "Freelance",
+  { name: "Food & Dining", color: "#F87171" }, // red
+  { name: "Shopping", color: "#FBBF24" }, // yellow
+  { name: "Transport", color: "#60A5FA" }, // blue
+  { name: "Entertainment", color: "#A78BFA" }, // purple
+  { name: "Bills", color: "#34D399" }, // green
+  { name: "Salary", color: "#F472B6" }, // pink
+  { name: "Freelance", color: "#FCD34D" }, // amber
+];
+
+export const monthNames = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];

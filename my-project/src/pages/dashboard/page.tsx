@@ -1,27 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Target,
-  PiggyBank,
-  Target as TargetIcon,
-  Bell,
-} from "lucide-react";
+import { useState } from "react";
+import { Bell } from "lucide-react";
 import { useUserStore } from "../../stores/useUserStore";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import SummaryCards from "../../components/dashboard/SummaryCards";
 import ChartsCard from "../../components/dashboard/ChartsCard";
 import GoalsActionsCard from "../../components/dashboard/GoalsActionsCard";
+import type { GoalType, TransactionType } from "../../lib/types";
+type DashboardData = {
+  transactions: TransactionType[];
+  goals: GoalType[];
+};
 
 const DashboardPage = () => {
   const token = useUserStore((state) => state.userToken);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<DashboardData | null>({
     queryKey: ["dashboard-data"],
     queryFn: async () => {
       if (!token) return null;
@@ -42,85 +39,6 @@ const DashboardPage = () => {
     },
     enabled: !!token,
   });
-
-  // Static data for summary cards
-  const summaryData = [
-    {
-      title: "Total Income",
-      amount: "$5,250.00",
-      change: "+12%",
-      trend: "up",
-      icon: TrendingUp,
-      color: "text-green-500",
-      bgColor: "bg-green-50",
-    },
-    {
-      title: "Total Expenses",
-      amount: "$3,890.00",
-      change: "+8%",
-      trend: "down",
-      icon: TrendingDown,
-      color: "text-red-500",
-      bgColor: "bg-red-50",
-    },
-    {
-      title: "Balance",
-      amount: "$1,360.00",
-      change: "+5%",
-      trend: "up",
-      icon: DollarSign,
-      color: "text-blue-500",
-      bgColor: "bg-blue-50",
-    },
-  ];
-
-  // Static data for spending by category (Pie Chart)
-  const categoryData = [
-    { name: "Food & Dining", value: 35, color: "#FF6B6B" },
-    { name: "Shopping", value: 25, color: "#4ECDC4" },
-    { name: "Transport", value: 15, color: "#45B7D1" },
-    { name: "Entertainment", value: 12, color: "#FFA07A" },
-    { name: "Bills", value: 8, color: "#98D8C8" },
-    { name: "Others", value: 5, color: "#F7DC6F" },
-  ];
-
-  // Static data for income vs expense (Bar Chart)
-  const monthlyData = [
-    { month: "Jan", income: 4000, expense: 2400 },
-    { month: "Feb", income: 3000, expense: 1398 },
-    { month: "Mar", income: 2000, expense: 980 },
-    { month: "Apr", income: 2780, expense: 3908 },
-    { month: "May", income: 1890, expense: 4800 },
-    { month: "Jun", income: 2390, expense: 3800 },
-  ];
-
-  // Static data for goals
-  const goalsData = [
-    {
-      title: "Emergency Fund",
-      target: 10000,
-      current: 6500,
-      progress: 65,
-      icon: PiggyBank,
-      color: "bg-blue-500",
-    },
-    {
-      title: "New Laptop",
-      target: 2000,
-      current: 1200,
-      progress: 60,
-      icon: Target,
-      color: "bg-green-500",
-    },
-    {
-      title: "Vacation",
-      target: 3000,
-      current: 900,
-      progress: 30,
-      icon: Target,
-      color: "bg-purple-500",
-    },
-  ];
 
   return (
     <div className="p-4 lg:p-6">
@@ -149,13 +67,13 @@ const DashboardPage = () => {
       </div>
 
       {/* Summary Cards */}
-      <SummaryCards summaryData={summaryData} />
+      <SummaryCards transactions={data?.transactions ?? null} />
 
       {/* Charts Section */}
-      <ChartsCard categoryData={categoryData} monthlyData={monthlyData} />
+      <ChartsCard transactions={data?.transactions ?? null} />
 
       {/* Goals and Quick Actions Section */}
-      <GoalsActionsCard goalsData={goalsData} />
+      <GoalsActionsCard goals={data?.goals ?? null} />
     </div>
   );
 };

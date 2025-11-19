@@ -21,6 +21,24 @@ export const getAllUserTransactions = async (req, res) => {
   }
 };
 
+export const getUserReportTransactions = async (req, res) => {
+  try {
+    const { uid } = req.user;
+
+    const user = await User.findOne({ uid });
+    if (!user) {
+      return res.status(400).json({ message: "User didn't exist" });
+    }
+
+    const transactions = await Transaction.find({ userId: user._id });
+
+    res.status(201).json(transactions);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 export const getUserTransactions = async (req, res) => {
   try {
     const { uid } = req.user;

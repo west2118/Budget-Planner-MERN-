@@ -1,26 +1,19 @@
-import React, { useState } from "react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import { useMemo, useState } from "react";
+import type { TransactionType } from "../../lib/types";
+import { monthNames } from "../../lib/constants";
+import SpendingPieChart from "./SpendingPieChart";
+import IncomeExpenseBarChart from "./IncomeExpenseBarChart";
+import { useCategoryCounts, useMonthlyTotals } from "../../lib/utils";
 
 const ChartsCard = ({
-  categoryData,
-  monthlyData,
+  transactions,
 }: {
-  categoryData: any;
-  monthlyData: any;
+  transactions: TransactionType[] | null;
 }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  const categoryCountsData = useCategoryCounts(transactions);
+  const monthlyTotalsData = useMonthlyTotals(transactions);
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
@@ -30,32 +23,10 @@ const ChartsCard = ({
           Spending by Category
         </h3>
         <div className="h-64 sm:h-72 lg:h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={categoryData}
-                cx="50%"
-                cy="50%"
-                innerRadius={isMobile ? 40 : 60}
-                outerRadius={isMobile ? 60 : 80}
-                paddingAngle={2}
-                dataKey="value">
-                {categoryData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend
-                layout={isMobile ? "horizontal" : "vertical"}
-                verticalAlign={isMobile ? "bottom" : "middle"}
-                align={isMobile ? "center" : "right"}
-                wrapperStyle={{
-                  paddingTop: isMobile ? "10px" : "0",
-                  fontSize: "12px",
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+          <SpendingPieChart
+            categoryCountsData={categoryCountsData}
+            isMobile={isMobile}
+          />
         </div>
       </div>
 
@@ -65,27 +36,10 @@ const ChartsCard = ({
           Income vs Expense
         </h3>
         <div className="h-64 sm:h-72 lg:h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" fontSize={isMobile ? 12 : 14} />
-              <YAxis fontSize={isMobile ? 12 : 14} />
-              <Tooltip />
-              <Legend />
-              <Bar
-                dataKey="income"
-                fill="#4ECDC4"
-                name="Income"
-                radius={[2, 2, 0, 0]}
-              />
-              <Bar
-                dataKey="expense"
-                fill="#FF6B6B"
-                name="Expense"
-                radius={[2, 2, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <IncomeExpenseBarChart
+            monthlyTotalsData={monthlyTotalsData}
+            isMobile={isMobile}
+          />
         </div>
       </div>
     </div>

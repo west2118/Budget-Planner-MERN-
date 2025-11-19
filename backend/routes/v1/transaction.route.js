@@ -2,6 +2,7 @@ import express from "express";
 import { verifyToken } from "../../middleware/verifyToken.js";
 import {
   getAllUserTransactions,
+  getUserReportTransactions,
   deleteTransaction,
   getUserTransactions,
   postTransaction,
@@ -11,6 +12,7 @@ import {
 const router = express.Router();
 
 router.get("/transactions", verifyToken, getAllUserTransactions);
+router.get("/transactions-report", verifyToken, getUserReportTransactions);
 router.get("/transaction", verifyToken, getUserTransactions);
 router.post("/transaction", verifyToken, postTransaction);
 router.put("/transaction/:id", verifyToken, putTransaction);
