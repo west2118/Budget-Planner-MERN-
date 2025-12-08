@@ -2,6 +2,7 @@ import Card from "../../models/card.model.js";
 import Goal from "../../models/goal.model.js";
 import Transaction from "../../models/transaction.model.js";
 import User from "../../models/user.model.js";
+import { getIncomeVsExpenses } from "../../services/transactionService.js";
 
 export const getAllUserTransactions = async (req, res) => {
   try {
@@ -30,9 +31,11 @@ export const getUserReportTransactions = async (req, res) => {
       return res.status(400).json({ message: "User didn't exist" });
     }
 
-    const transactions = await Transaction.find({ userId: user._id });
+    const data = await getIncomeVsExpenses();
 
-    res.status(201).json(transactions);
+    console.log("DATAAAA: ", data);
+
+    res.status(201).json(data);
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: "Server error", error: error.message });

@@ -75,9 +75,6 @@ const ChartsSection = ({
 }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
-  const categoryCountsData = useCategoryCounts(transactions);
-  const monthlyTotalsData = useMonthlyTotals(transactions, 11);
-
   return (
     <>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
@@ -91,10 +88,27 @@ const ChartsSection = ({
             <span className="text-sm text-gray-500">Monthly Comparison</span>
           </div>
           <div className="h-80">
-            <IncomeExpenseBarChart
-              monthlyTotalsData={monthlyTotalsData}
-              isMobile={isMobile}
-            />
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={monthlyComparisonData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" fontSize={isMobile ? 12 : 14} />
+                <YAxis fontSize={isMobile ? 12 : 14} />
+                <Tooltip />
+                <Legend />
+                <Bar
+                  dataKey="Income"
+                  fill="#4ECDC4"
+                  name="Income"
+                  radius={[2, 2, 0, 0]}
+                />
+                <Bar
+                  dataKey="Expense"
+                  fill="#FF6B6B"
+                  name="Expense"
+                  radius={[2, 2, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -108,10 +122,38 @@ const ChartsSection = ({
             <span className="text-sm text-gray-500">Year 2024</span>
           </div>
           <div className="h-80">
-            <SpendingPieChart
-              categoryCountsData={categoryCountsData}
-              isMobile={isMobile}
-            />
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={expenseCategoryData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={2}
+                  dataKey="value"
+                  label={(props: any) => {
+                    const name = props.name as string;
+                    const percent =
+                      typeof props.percent === "number" ? props.percent : 0;
+                    return `${name} ${(percent * 100).toFixed(0)}%`;
+                  }}>
+                  {expenseCategoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => [value, "Transactions"]} />
+                <Legend
+                  layout={isMobile ? "horizontal" : "vertical"}
+                  verticalAlign={isMobile ? "bottom" : "middle"}
+                  align={isMobile ? "center" : "right"}
+                  wrapperStyle={{
+                    paddingTop: isMobile ? "10px" : "0",
+                    fontSize: "12px",
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>

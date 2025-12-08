@@ -1,50 +1,111 @@
 import { DollarSign, TrendingDown, TrendingUp } from "lucide-react";
-import React from "react";
+import React, { useMemo } from "react";
+import type { TransactionType } from "../../lib/types";
 
-// Static summary statistics
-const summaryStats = [
-  {
-    title: "Total Income",
-    value: "$58,400",
-    change: "+12.5%",
-    trend: "up",
-    icon: TrendingUp,
-    color: "text-green-500",
-    bgColor: "bg-green-50",
-  },
-  {
-    title: "Total Expenses",
-    value: "$39,200",
-    change: "+8.2%",
-    trend: "down",
-    icon: TrendingDown,
-    color: "text-red-500",
-    bgColor: "bg-red-50",
-  },
-  {
-    title: "Net Savings",
-    value: "$19,200",
-    change: "+15.3%",
-    trend: "up",
-    icon: DollarSign,
-    color: "text-blue-500",
-    bgColor: "bg-blue-50",
-  },
-  {
-    title: "Savings Rate",
-    value: "32.9%",
-    change: "+4.1%",
-    trend: "up",
-    icon: TrendingUp,
-    color: "text-purple-500",
-    bgColor: "bg-purple-50",
-  },
-];
+const SummaryStats = ({
+  transactions,
+}: {
+  transactions: TransactionType[] | null;
+}) => {
+  const summaryData = useMemo(() => {
+    if (!transactions || transactions.length === 0) {
+      return [
+        {
+          title: "Total Income",
+          value: 0,
+          change: "+12.5%",
+          trend: "up",
+          icon: TrendingUp,
+          color: "text-green-500",
+          bgColor: "bg-green-50",
+        },
+        {
+          title: "Total Expenses",
+          value: 0,
+          change: "+8.2%",
+          trend: "down",
+          icon: TrendingDown,
+          color: "text-red-500",
+          bgColor: "bg-red-50",
+        },
+        {
+          title: "Net Savings",
+          value: 0,
+          change: "+15.3%",
+          trend: "up",
+          icon: DollarSign,
+          color: "text-blue-500",
+          bgColor: "bg-blue-50",
+        },
+        {
+          title: "Savings Rate",
+          value: 0,
+          change: "+4.1%",
+          trend: "up",
+          icon: TrendingUp,
+          color: "text-purple-500",
+          bgColor: "bg-purple-50",
+        },
+      ];
+    }
 
-const SummaryStats = () => {
+    const totals = transactions?.reduce(
+      (acc, t) => {
+        if (t.type === "Income") acc.income += Number(t.amount);
+        else if (t.type === "Expense") acc.expense += Number(t.amount);
+        return acc;
+      },
+      { income: 0, expense: 0 }
+    ) ?? { income: 0, expense: 0 };
+
+    const balance = totals.income - totals.expense;
+
+    const savingsRate =
+      totals.income > 0 ? ((balance / totals.income) * 100).toFixed(1) : 0;
+
+    return [
+      {
+        title: "Total Income",
+        value: totals.income,
+        change: "+12.5%",
+        trend: "up",
+        icon: TrendingUp,
+        color: "text-green-500",
+        bgColor: "bg-green-50",
+      },
+      {
+        title: "Total Expenses",
+        value: totals.expense,
+        change: "+8.2%",
+        trend: "down",
+        icon: TrendingDown,
+        color: "text-red-500",
+        bgColor: "bg-red-50",
+      },
+      {
+        title: "Net Savings",
+        value: balance,
+        change: "+15.3%",
+        trend: "up",
+        icon: DollarSign,
+        color: "text-blue-500",
+        bgColor: "bg-blue-50",
+      },
+      {
+        title: "Savings Rate",
+        value: `${savingsRate}%`,
+        change: "+4.1%",
+        trend: "up",
+        icon: TrendingUp,
+        color: "text-purple-500",
+        bgColor: "bg-purple-50",
+      },
+    ];
+  }, [transactions]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {summaryStats.map((stat, index) => {
+      {summaryData.map((stat, index) => {
         const IconComponent = stat.icon;
         return (
           <div
@@ -56,7 +117,8 @@ const SummaryStats = () => {
                   {stat.title}
                 </p>
                 <p className="text-2xl font-bold text-gray-900 mt-2">
-                  {stat.value}
+                  {summaryData && stat.title === "Savings Rate" ? "" : "$"}
+                  {stat.value.toLocaleString()}
                 </p>
                 <p
                   className={`text-sm mt-1 ${

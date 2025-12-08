@@ -152,15 +152,24 @@ const GoalCard = ({
         </div>
 
         {/* Days Left */}
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-          <span className="text-sm text-gray-600">Days left</span>
-          <span
-            className={`text-sm font-semibold ${
-              remainingDays < 30 ? "text-red-600" : "text-gray-900"
-            }`}>
-            {remainingDays} days
-          </span>
-        </div>
+        {goalProgress === 100 ? (
+          <div className="flex items-center justify-center p-3 bg-green-50 rounded-lg">
+            {/* <span className="text-sm text-gray-600">Status</span> */}
+            <span className="text-sm font-semibold text-emerald-600">
+              Completed 🎉
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <span className="text-sm text-gray-600">Days left</span>
+            <span
+              className={`text-sm font-semibold ${
+                remainingDays < 30 ? "text-red-600" : "text-gray-900"
+              }`}>
+              {remainingDays} days
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

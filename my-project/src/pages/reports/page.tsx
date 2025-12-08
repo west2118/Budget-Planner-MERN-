@@ -21,6 +21,8 @@ const ReportsPage = () => {
     enabled: !!token,
   });
 
+  console.log("DATA: ", data);
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -35,7 +37,7 @@ const ReportsPage = () => {
       <FilterActions />
 
       {/* Summary Statistics */}
-      <SummaryStats />
+      <SummaryStats transactions={data ?? []} />
 
       {/* Charts Section */}
       <ChartsSection transactions={data ?? []} />
