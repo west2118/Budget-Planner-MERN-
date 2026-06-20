@@ -4,24 +4,21 @@ import FilterActions from "../../components/reports/FilterActions";
 import SummaryStats from "../../components/reports/SummaryStats";
 import ChartsSection from "../../components/reports/ChartsSection";
 import Insights from "../../components/reports/Insights";
-import { useUserStore } from "../../stores/useUserStore";
-import { useQuery } from "@tanstack/react-query";
-import type { TransactionType } from "../../lib/types";
-import { fetchData } from "../../lib/utils";
+import { useState } from "react";
+
+const formatDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const ReportsPage = () => {
-  const token = useUserStore((state) => state.userToken);
-
-  const { data, error, isLoading } = useQuery<TransactionType[]>({
-    queryKey: ["report-data"],
-    queryFn: fetchData(
-      "http://localhost:8080/api/v1/transactions-report",
-      token
-    ),
-    enabled: !!token,
+  const [filters, setFilters] = useState({
+    startDate: formatDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1)),
+    endDate: formatDate(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)),
+    reportType: "Monthly",
   });
-
-  console.log("DATA: ", data);
 
   return (
     <div className="p-6">
@@ -34,13 +31,13 @@ const ReportsPage = () => {
       </div>
 
       {/* Filters and Actions */}
-      <FilterActions />
+      <FilterActions filters={filters} setFilters={setFilters} />
 
       {/* Summary Statistics */}
-      <SummaryStats transactions={data ?? []} />
+      <SummaryStats filters={filters} />
 
       {/* Charts Section */}
-      <ChartsSection transactions={data ?? []} />
+      <ChartsSection filters={filters} />
 
       {/* Insights Section */}
       <Insights />

@@ -5,8 +5,8 @@ import {
   Route,
   RouterProvider,
 } from "react-router-dom";
-import DashboardLayout from "./components/DashboardLayout";
-import HomeLayout from "./components/HomeLayout";
+import DashboardLayout from "./components/layout/DashboardLayout";
+import HomeLayout from "./components/layout/HomeLayout";
 import LandingPage from "./components/LandingPage";
 import LoginPage from "./pages/login/page";
 import RegisterPage from "./pages/register/page";

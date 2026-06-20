@@ -5,16 +5,16 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import type { CardType, GoalType, TransactionType } from "../../lib/types";
 import Modal from "../ui/Modal";
-import DeleteModal from "../DeleteModal";
+import DeleteModal from "../ui/DeleteModal";
 import { Loader } from "lucide-react";
 import { categories } from "../../lib/constants";
+import { useCards } from "../../hooks/useCards";
+import { useGoals } from "../../hooks/useGoals";
 
 type FormDataTransactionProps = {
   isModalOpen: boolean;
   isCloseModal: () => void;
   token: string | null;
-  dataCards: CardType[];
-  dataGoals: GoalType[];
   isEdit: boolean;
   selectedTransaction: TransactionType | null;
   isDelete?: boolean;
@@ -34,13 +34,13 @@ const FormDataTransaction = ({
   isModalOpen,
   isCloseModal,
   token,
-  dataCards,
-  dataGoals,
   isEdit,
   selectedTransaction,
   isDelete = false,
 }: FormDataTransactionProps) => {
   const queryClient = useQueryClient();
+  const { data: dataCards } = useCards();
+  const { data: dataGoals } = useGoals();
   const [isPending, startTransition] = useTransition();
   const { formData, handleChange, setField } = useForm<FormData>({
     cardId: "",
@@ -107,7 +107,9 @@ const FormDataTransaction = ({
     onSuccess: (response) => {
       isCloseModal();
       toast.success(response.message);
-      queryClient.invalidateQueries({ queryKey: ["transaction-data"] });
+
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["transaction-summary"] });
     },
     onError: () => {
       toast.error("Something went wrong");
@@ -164,11 +166,35 @@ const FormDataTransaction = ({
             type="number"
             name="amount"
             value={formData.amount}
-            onChange={handleChange}
+            onChange={(e) => {
+              let val = Number(e.target.value);
+              if (formData.goalId) {
+                const selectedGoal = dataGoals?.find((g) => g._id === formData.goalId);
+                if (selectedGoal) {
+                  const remainingAmount = selectedGoal.targetAmount - selectedGoal.currentAmount;
+                  if (val > remainingAmount) {
+                    val = remainingAmount;
+                  }
+                }
+              }
+              setField("amount", val);
+            }}
             min={1}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="0.00"
           />
+          {formData.goalId && (() => {
+            const selectedGoal = dataGoals?.find((g) => g._id === formData.goalId);
+            if (selectedGoal) {
+              const remainingAmount = selectedGoal.targetAmount - selectedGoal.currentAmount;
+              return (
+                <p className="text-xs text-gray-500 mt-1">
+                  Remaining goal amount: {remainingAmount}
+                </p>
+              );
+            }
+            return null;
+          })()}
         </div>
 
         {/* Category */}
@@ -218,7 +244,19 @@ const FormDataTransaction = ({
           </label>
           <select
             value={formData.goalId}
-            onChange={(e) => setField("goalId", e.target.value)}
+            onChange={(e) => {
+              const newGoalId = e.target.value;
+              setField("goalId", newGoalId);
+              if (newGoalId && formData.amount) {
+                const selectedGoal = dataGoals?.find((g) => g._id === newGoalId);
+                if (selectedGoal) {
+                  const remainingAmount = selectedGoal.targetAmount - selectedGoal.currentAmount;
+                  if (Number(formData.amount) > remainingAmount) {
+                    setField("amount", remainingAmount);
+                  }
+                }
+              }
+            }}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             <option value="" disabled>
               Select goal

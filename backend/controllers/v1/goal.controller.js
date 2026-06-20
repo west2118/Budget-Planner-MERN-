@@ -4,15 +4,29 @@ import User from "../../models/user.model.js";
 export const getAllUserGoals = async (req, res) => {
   try {
     const { uid } = req.user;
+    const { page = 1, limit = 6, status = "all" } = req.query;
 
     const user = await User.findOne({ uid });
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
 
-    const goals = await Goal.find({ userId: user._id });
+    let filter = { userId: user._id };
+    if (status === "active") {
+      filter.$expr = { $lt: ["$currentAmount", "$targetAmount"] };
+    } else if (status === "completed") {
+      filter.$expr = { $gte: ["$currentAmount", "$targetAmount"] };
+    }
 
-    res.status(201).json(goals);
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const goals = await Goal.find(filter).skip(skip).limit(limitNumber);
+    const totalGoals = await Goal.countDocuments(filter);
+    const totalPages = Math.ceil(totalGoals / limitNumber);
+
+    res.status(200).json({ goals, totalPages, currentPage: pageNumber });
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: "Server error", error: error.message });
@@ -28,7 +42,10 @@ export const getUserGoals = async (req, res) => {
       return res.status(400).json({ message: "User didn't exist" });
     }
 
-    const goals = await Goal.find({ userId: user._id });
+    const goals = await Goal.find({ 
+      userId: user._id,
+      $expr: { $lt: ["$currentAmount", "$targetAmount"] }
+    });
 
     res.status(200).json(goals);
   } catch (error) {

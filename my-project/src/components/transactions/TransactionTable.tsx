@@ -2,16 +2,33 @@ import { Edit, Trash2 } from "lucide-react";
 import React from "react";
 import type { TransactionType } from "../../lib/types";
 import TransactionRow from "./TransactionRow";
+import { useTransactions } from "../../hooks/useTransactions";
 
 const TransactionTable = ({
-  dataTransactions,
   handleEditTransaction,
   handleDeleteTransaction,
 }: {
-  dataTransactions: TransactionType[];
   handleEditTransaction: (transaction: TransactionType) => void;
   handleDeleteTransaction: (transaction: TransactionType) => void;
 }) => {
+  const { data: dataTransactions, isLoading, error } = useTransactions(true);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-center" role="alert">
+        <strong className="font-bold">Error! </strong>
+        <span className="block sm:inline">Failed to load transactions data. Please try again later.</span>
+      </div>
+    );
+  }
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="overflow-x-auto">
@@ -54,25 +71,26 @@ const TransactionTable = ({
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* Pagination (Visual only for now) */}
       <div className="bg-white px-6 py-4 border-t border-gray-200">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">1</span> to{" "}
-            <span className="font-medium">7</span> of{" "}
-            <span className="font-medium">7</span> results
+            Showing <span className="font-medium">{dataTransactions?.length ? 1 : 0}</span> to{" "}
+            <span className="font-medium">{dataTransactions?.length || 0}</span> of{" "}
+            <span className="font-medium">{dataTransactions?.length || 0}</span> results
           </div>
           <div className="flex space-x-2">
-            <button className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-500 bg-white hover:bg-gray-50">
+            <button
+              disabled
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-300 bg-gray-50 cursor-not-allowed">
               Previous
             </button>
             <button className="px-3 py-1 border border-blue-500 bg-blue-50 text-blue-600 rounded-md text-sm font-medium">
               1
             </button>
-            <button className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-500 bg-white hover:bg-gray-50">
-              2
-            </button>
-            <button className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-500 bg-white hover:bg-gray-50">
+            <button
+              disabled
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-300 bg-gray-50 cursor-not-allowed">
               Next
             </button>
           </div>

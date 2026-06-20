@@ -16,15 +16,25 @@ const SpendingPieChart = ({
   categoryCountsData: Record<string, number>;
   isMobile: boolean;
 }) => {
-  const chartData = Object.entries(categoryCountsData).map(([name, value]) => {
-    const category = categories.find((category) => category.name === name);
+  const chartData = Object.entries(categoryCountsData)
+    .filter(([_, value]) => value > 0 && !isNaN(value))
+    .map(([name, value]) => {
+      const category = categories.find((category) => category.name === name);
 
-    return {
-      name,
-      value,
-      color: category ? category.color : "#E5E7EB",
-    };
-  });
+      return {
+        name,
+        value,
+        color: category ? category.color : "#E5E7EB",
+      };
+    });
+
+  if (chartData.length === 0) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-gray-500">
+        No spending data available.
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -47,7 +57,7 @@ const SpendingPieChart = ({
             <Cell key={`cell-${index}`} fill={entry.color} />
           ))}
         </Pie>
-        <Tooltip formatter={(value) => [value, "Transactions"]} />
+        <Tooltip formatter={(value) => [`$${Number(value).toLocaleString()}`, "Amount"]} />
         <Legend
           layout={isMobile ? "horizontal" : "vertical"}
           verticalAlign={isMobile ? "bottom" : "middle"}

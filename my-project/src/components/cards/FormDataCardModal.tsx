@@ -68,14 +68,14 @@ const FormDataCardModal = ({
         if (!selectedCard) return;
 
         res = await axios.put(
-          `http://localhost:8080/api/v1/card/${selectedCard?._id}`,
+          `http://localhost:8080/api/v1/cards/${selectedCard?._id}`,
           { formData },
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
       } else {
-        res = await axios.post("http://localhost:8080/api/v1/card", formData, {
+        res = await axios.post("http://localhost:8080/api/v1/cards", formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
@@ -166,7 +166,8 @@ const FormDataCardModal = ({
                 name="balance"
                 value={formData.balance}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                disabled={isEdit}
+                className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isEdit ? "bg-gray-100 cursor-not-allowed text-gray-500" : ""}`}
                 placeholder="0.00"
               />
             </div>

@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { categoriesGoal } from "../../lib/constants";
 import Modal from "../ui/Modal";
 import { Loader } from "lucide-react";
-import DeleteModal from "../DeleteModal";
+import DeleteModal from "../ui/DeleteModal";
 
 type FormDataGoalModalProps = {
   isModalOpen: boolean;
@@ -64,7 +64,7 @@ const FormDataGoalModal = ({
         if (!selectedGoal) return;
 
         res = await axios.put(
-          `http://localhost:8080/api/v1/goal/${selectedGoal?._id}`,
+          `http://localhost:8080/api/v1/goals/${selectedGoal?._id}`,
           { formData },
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -72,13 +72,13 @@ const FormDataGoalModal = ({
         );
       } else if (isDelete) {
         res = await axios.delete(
-          `http://localhost:8080/api/v1/goal/${selectedGoal?._id}`,
+          `http://localhost:8080/api/v1/goals/${selectedGoal?._id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
       } else {
-        res = await axios.post("http://localhost:8080/api/v1/goal", formData, {
+        res = await axios.post("http://localhost:8080/api/v1/goals", formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }

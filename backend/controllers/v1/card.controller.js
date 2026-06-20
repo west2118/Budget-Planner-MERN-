@@ -18,6 +18,37 @@ export const getUserCards = async (req, res) => {
   }
 };
 
+export const getCardsSummary = async (req, res) => {
+  try {
+    const { uid } = req.user;
+
+    const user = await User.findOne({ uid });
+    if (!user) {
+      return res.status(400).json({ message: "User didn't exist" });
+    }
+
+    const cards = await Card.find({ userId: user._id });
+
+    const totalBalance = cards.reduce((sum, card) => sum + card.balance, 0);
+    const creditCards = cards.filter((card) => card.type === "Credit");
+    const totalCreditLimit = cards.reduce(
+      (sum, card) => sum + (card.budgetLimit || 0),
+      0
+    );
+    const totalCreditUsed = creditCards.reduce((sum, card) => sum + card.balance, 0);
+
+    res.status(200).json({
+      totalBalance,
+      totalCreditLimit,
+      totalCreditUsed,
+      totalCards: cards.length,
+      creditCardsCount: creditCards.length,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 export const postCard = async (req, res) => {
   try {
     const { uid } = req.user;

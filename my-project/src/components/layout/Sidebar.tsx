@@ -10,11 +10,12 @@ import {
   X,
   CardSim,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const Sidebar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const location = useLocation();
 
   // Memoized resize handler
   const handleResize = useCallback(() => {
@@ -60,19 +61,28 @@ const Sidebar = () => {
   // Memoized navigation items
   const navItems = React.useMemo(
     () => [
-      { icon: Home, label: "Dashboard", active: true, link: "/dashboard" },
+      { icon: Home, label: "Dashboard", link: "/dashboard" },
       {
         icon: Wallet,
         label: "Transactions",
-        active: false,
-        link: "transactions",
+        link: "/dashboard/transactions",
       },
-      { icon: BarChart3, label: "Analytics", active: false, link: "reports" },
-      { icon: TargetIcon, label: "Goals", active: false, link: "goals" },
-      { icon: CardSim, label: "Cards", active: false, link: "cards" },
-      { icon: Settings, label: "Settings", active: false, link: "settings" },
-    ],
-    []
+      { icon: BarChart3, label: "Analytics", link: "/dashboard/reports" },
+      { icon: TargetIcon, label: "Goals", link: "/dashboard/goals" },
+      { icon: CardSim, label: "Cards", link: "/dashboard/cards" },
+      { icon: Settings, label: "Settings", link: "/dashboard/settings" },
+    ].map(item => {
+      const isDashboard = item.link === "/dashboard";
+      const isActive = isDashboard 
+        ? location.pathname === "/dashboard" 
+        : location.pathname.includes(item.link);
+
+      return {
+        ...item,
+        active: isActive
+      };
+    }),
+    [location.pathname]
   );
 
   // Toggle sidebar function

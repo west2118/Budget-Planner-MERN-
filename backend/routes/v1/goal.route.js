@@ -11,9 +11,9 @@ import {
 const router = express.Router();
 
 router.get("/goals", verifyToken, getAllUserGoals);
-router.get("/goal", verifyToken, getUserGoals);
-router.post("/goal", verifyToken, postGoal);
-router.put("/goal/:id", verifyToken, putGoal);
-router.delete("/goal/:id", verifyToken, deleteGoal);
+router.get("/goals/active", verifyToken, getUserGoals);
+router.post("/goals", verifyToken, postGoal);
+router.put("/goals/:id", verifyToken, putGoal);
+router.delete("/goals/:id", verifyToken, deleteGoal);
 
 export default router;

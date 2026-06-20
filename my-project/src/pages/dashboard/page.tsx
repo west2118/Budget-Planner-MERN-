@@ -1,45 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { Bell } from "lucide-react";
-import { useUserStore } from "../../stores/useUserStore";
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
 import SummaryCards from "../../components/dashboard/SummaryCards";
 import ChartsCard from "../../components/dashboard/ChartsCard";
 import GoalsActionsCard from "../../components/dashboard/GoalsActionsCard";
-import type { GoalType, TransactionType } from "../../lib/types";
-type DashboardData = {
-  transactions: TransactionType[];
-  goals: GoalType[];
-};
 
 const DashboardPage = () => {
-  const token = useUserStore((state) => state.userToken);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const { data, isLoading, error } = useQuery<DashboardData | null>({
-    queryKey: ["dashboard-data"],
-    queryFn: async () => {
-      if (!token) return null;
-
-      const [transactionsRes, goalsRes] = await Promise.all([
-        axios.get("http://localhost:8080/api/v1/transactions", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get("http://localhost:8080/api/v1/goals", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      return {
-        transactions: transactionsRes.data,
-        goals: goalsRes.data,
-      };
-    },
-    enabled: !!token,
-  });
-
   return (
     <div className="p-4 lg:p-6">
       {/* Header */}
@@ -67,13 +33,13 @@ const DashboardPage = () => {
       </div>
 
       {/* Summary Cards */}
-      <SummaryCards transactions={data?.transactions ?? null} />
+      <SummaryCards />
 
       {/* Charts Section */}
-      <ChartsCard transactions={data?.transactions ?? null} />
+      <ChartsCard />
 
       {/* Goals and Quick Actions Section */}
-      <GoalsActionsCard goals={data?.goals ?? null} />
+      <GoalsActionsCard />
     </div>
   );
 };

@@ -36,7 +36,7 @@ const DeleteCardModal = ({
   const mutation = useMutation({
     mutationFn: async () => {
       const res = await axios.delete(
-        `http://localhost:8080/api/v1/card/${selectedCard?._id}`,
+        `http://localhost:8080/api/v1/cards/${selectedCard?._id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

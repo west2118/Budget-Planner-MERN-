@@ -1,107 +1,71 @@
 import { DollarSign, TrendingDown, TrendingUp } from "lucide-react";
-import React, { useMemo } from "react";
-import type { TransactionType } from "../../lib/types";
+import React from "react";
+import { useReportSummary } from "../../hooks/useReportSummary";
 
-const SummaryStats = ({
-  transactions,
-}: {
-  transactions: TransactionType[] | null;
-}) => {
-  const summaryData = useMemo(() => {
-    if (!transactions || transactions.length === 0) {
-      return [
-        {
-          title: "Total Income",
-          value: 0,
-          change: "+12.5%",
-          trend: "up",
-          icon: TrendingUp,
-          color: "text-green-500",
-          bgColor: "bg-green-50",
-        },
-        {
-          title: "Total Expenses",
-          value: 0,
-          change: "+8.2%",
-          trend: "down",
-          icon: TrendingDown,
-          color: "text-red-500",
-          bgColor: "bg-red-50",
-        },
-        {
-          title: "Net Savings",
-          value: 0,
-          change: "+15.3%",
-          trend: "up",
-          icon: DollarSign,
-          color: "text-blue-500",
-          bgColor: "bg-blue-50",
-        },
-        {
-          title: "Savings Rate",
-          value: 0,
-          change: "+4.1%",
-          trend: "up",
-          icon: TrendingUp,
-          color: "text-purple-500",
-          bgColor: "bg-purple-50",
-        },
-      ];
-    }
+type SummaryStatsProps = {
+  filters: { startDate: string; endDate: string };
+};
 
-    const totals = transactions?.reduce(
-      (acc, t) => {
-        if (t.type === "Income") acc.income += Number(t.amount);
-        else if (t.type === "Expense") acc.expense += Number(t.amount);
-        return acc;
-      },
-      { income: 0, expense: 0 }
-    ) ?? { income: 0, expense: 0 };
+const SummaryStats = ({ filters }: SummaryStatsProps) => {
+  const { data, isLoading, error } = useReportSummary(filters);
 
-    const balance = totals.income - totals.expense;
+  const totalIncome = data?.totalIncome ?? 0;
+  const totalExpenses = data?.totalExpenses ?? 0;
+  const netSavings = data?.netSavings ?? 0;
+  const savingsRate = data?.savingsRate ?? 0;
 
-    const savingsRate =
-      totals.income > 0 ? ((balance / totals.income) * 100).toFixed(1) : 0;
+  const summaryData = [
+    {
+      title: "Total Income",
+      value: totalIncome,
+      change: "",
+      trend: "up",
+      icon: TrendingUp,
+      color: "text-green-500",
+      bgColor: "bg-green-50",
+    },
+    {
+      title: "Total Expenses",
+      value: totalExpenses,
+      change: "",
+      trend: "down",
+      icon: TrendingDown,
+      color: "text-red-500",
+      bgColor: "bg-red-50",
+    },
+    {
+      title: "Net Savings",
+      value: netSavings,
+      change: "",
+      trend: "up",
+      icon: DollarSign,
+      color: "text-blue-500",
+      bgColor: "bg-blue-50",
+    },
+    {
+      title: "Savings Rate",
+      value: `${savingsRate}%`,
+      change: "",
+      trend: "up",
+      icon: TrendingUp,
+      color: "text-purple-500",
+      bgColor: "bg-purple-50",
+    },
+  ];
 
-    return [
-      {
-        title: "Total Income",
-        value: totals.income,
-        change: "+12.5%",
-        trend: "up",
-        icon: TrendingUp,
-        color: "text-green-500",
-        bgColor: "bg-green-50",
-      },
-      {
-        title: "Total Expenses",
-        value: totals.expense,
-        change: "+8.2%",
-        trend: "down",
-        icon: TrendingDown,
-        color: "text-red-500",
-        bgColor: "bg-red-50",
-      },
-      {
-        title: "Net Savings",
-        value: balance,
-        change: "+15.3%",
-        trend: "up",
-        icon: DollarSign,
-        color: "text-blue-500",
-        bgColor: "bg-blue-50",
-      },
-      {
-        title: "Savings Rate",
-        value: `${savingsRate}%`,
-        change: "+4.1%",
-        trend: "up",
-        icon: TrendingUp,
-        color: "text-purple-500",
-        bgColor: "bg-purple-50",
-      },
-    ];
-  }, [transactions]);
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-28 bg-gray-100 animate-pulse rounded-xl border border-gray-100"></div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return null;
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -117,14 +81,8 @@ const SummaryStats = ({
                   {stat.title}
                 </p>
                 <p className="text-2xl font-bold text-gray-900 mt-2">
-                  {summaryData && stat.title === "Savings Rate" ? "" : "$"}
-                  {stat.value.toLocaleString()}
-                </p>
-                <p
-                  className={`text-sm mt-1 ${
-                    stat.trend === "up" ? "text-green-500" : "text-red-500"
-                  }`}>
-                  {stat.change} from last period
+                  {stat.title === "Savings Rate" ? "" : "$"}
+                  {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
                 </p>
               </div>
               <div className={`p-3 rounded-full ${stat.bgColor}`}>

@@ -25,7 +25,7 @@ export function useCategoryCounts(transactions: TransactionType[] | null = []) {
     return transactions.reduce<Record<string, number>>((acc, transaction) => {
       if (transaction.type !== "Expense" || !transaction.category) return acc;
 
-      acc[transaction.category] = (acc[transaction.category] || 0) + 1;
+      acc[transaction.category] = (acc[transaction.category] || 0) + Number(transaction.amount);
       return acc;
     }, {});
   }, [transactions]);

@@ -33,8 +33,6 @@ export const getUserReportTransactions = async (req, res) => {
 
     const data = await getIncomeVsExpenses();
 
-    console.log("DATAAAA: ", data);
-
     res.status(201).json(data);
   } catch (error) {
     console.log(error.message);
@@ -235,6 +233,41 @@ export const deleteTransaction = async (req, res) => {
 
     res.status(200).json({ message: "Transaction deleted successfully!" });
   } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const getTransactionSummary = async (req, res) => {
+  try {
+    const { uid } = req.user;
+
+    const user = await User.findOne({ uid });
+    if (!user) {
+      return res.status(400).json({ message: "User didn't exist" });
+    }
+
+    const result = await Transaction.aggregate([
+      { $match: { userId: user._id } },
+      {
+        $group: {
+          _id: null,
+          totalIncome: {
+            $sum: { $cond: [{ $eq: ["$type", "Income"] }, "$amount", 0] },
+          },
+          totalExpense: {
+            $sum: { $cond: [{ $eq: ["$type", "Expense"] }, "$amount", 0] },
+          },
+        },
+      },
+    ]);
+
+    const income = result.length > 0 ? result[0].totalIncome : 0;
+    const expense = result.length > 0 ? result[0].totalExpense : 0;
+    const balance = income - expense;
+
+    res.status(200).json({ income, expense, balance });
+  } catch (error) {
+    console.log(error.message);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

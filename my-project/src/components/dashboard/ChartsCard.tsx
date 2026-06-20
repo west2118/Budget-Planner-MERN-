@@ -4,16 +4,31 @@ import { monthNames } from "../../lib/constants";
 import SpendingPieChart from "./SpendingPieChart";
 import IncomeExpenseBarChart from "./IncomeExpenseBarChart";
 import { useCategoryCounts, useMonthlyTotals } from "../../lib/utils";
+import { useTransactions } from "../../hooks/useTransactions";
 
-const ChartsCard = ({
-  transactions,
-}: {
-  transactions: TransactionType[] | null;
-}) => {
+const ChartsCard = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const { data: transactions, isLoading, error } = useTransactions();
 
-  const categoryCountsData = useCategoryCounts(transactions);
-  const monthlyTotalsData = useMonthlyTotals(transactions);
+  const categoryCountsData = useCategoryCounts(transactions ?? null);
+  const monthlyTotalsData = useMonthlyTotals(transactions ?? null);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8 animate-pulse">
+        <div className="bg-gray-100 rounded-xl shadow-sm h-[400px]"></div>
+        <div className="bg-gray-100 rounded-xl shadow-sm h-[400px]"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-center mb-6 lg:mb-8">
+        Failed to load chart data.
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">

@@ -7,11 +7,13 @@ import {
   getUserTransactions,
   postTransaction,
   putTransaction,
+  getTransactionSummary,
 } from "../../controllers/v1/transaction.controller.js";
 
 const router = express.Router();
 
 router.get("/transactions", verifyToken, getAllUserTransactions);
+router.get("/transactions/summary", verifyToken, getTransactionSummary);
 router.get("/transactions-report", verifyToken, getUserReportTransactions);
 router.get("/transaction", verifyToken, getUserTransactions);
 router.post("/transaction", verifyToken, postTransaction);
