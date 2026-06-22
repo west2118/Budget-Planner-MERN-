@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "../lib/api";
-import { useUserStore } from "../stores/useUserStore";
 
 export type TransactionSummaryType = {
   income: number;
@@ -9,7 +8,6 @@ export type TransactionSummaryType = {
 };
 
 export const useTransactionSummary = () => {
-  const token = useUserStore((state) => state.userToken);
 
   return useQuery<TransactionSummaryType>({
     queryKey: ["transactions-summary"],
@@ -17,6 +15,5 @@ export const useTransactionSummary = () => {
       const response = await api.get("/transactions/summary");
       return response.data;
     },
-    enabled: !!token,
   });
 };

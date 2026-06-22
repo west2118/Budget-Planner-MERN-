@@ -2,18 +2,16 @@ import { X, AlertTriangle, Loader } from "lucide-react";
 import { startTransition, useEffect, useTransition } from "react";
 import type { CardType } from "../../lib/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import api from "../../lib/api";
 import { toast } from "react-toastify";
 
 type DeleteCardModalProps = {
-  token: string | null;
   isModalOpen: boolean;
   isCloseModal: () => void;
   selectedCard: CardType | null;
 };
 
 const DeleteCardModal = ({
-  token,
   isModalOpen,
   isCloseModal,
   selectedCard,
@@ -35,19 +33,16 @@ const DeleteCardModal = ({
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const res = await axios.delete(
-        `http://localhost:8080/api/v1/cards/${selectedCard?._id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      if (!selectedCard) return;
 
+      const res = await api.delete(`/cards/${selectedCard._id}`);
       return res.data;
     },
     onSuccess: (response) => {
       isCloseModal();
       toast.success(response.message);
-      queryClient.invalidateQueries({ queryKey: ["user-cards"] });
+      queryClient.invalidateQueries({ queryKey: ["cards"] });
+      queryClient.invalidateQueries({ queryKey: ["cards-summary"] });
     },
     onError: () => {
       toast.error("Something went wrong");

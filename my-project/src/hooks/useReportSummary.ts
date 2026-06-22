@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "../lib/api";
-import { useUserStore } from "../stores/useUserStore";
 
 type ReportSummaryResponse = {
   totalIncome: number;
@@ -10,7 +9,6 @@ type ReportSummaryResponse = {
 };
 
 export const useReportSummary = (filters: { startDate: string; endDate: string }) => {
-  const token = useUserStore((state) => state.userToken);
 
   return useQuery<ReportSummaryResponse>({
     queryKey: ["report-summary", filters],
@@ -18,6 +16,5 @@ export const useReportSummary = (filters: { startDate: string; endDate: string }
       const response = await api.get("/reports/summary", { params: filters });
       return response.data;
     },
-    enabled: !!token,
   });
 };

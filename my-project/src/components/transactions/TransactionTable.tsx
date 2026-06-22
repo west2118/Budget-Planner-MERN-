@@ -1,8 +1,13 @@
-import { Edit, Trash2 } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import type { TransactionType } from "../../lib/types";
 import TransactionRow from "./TransactionRow";
-import { useTransactions } from "../../hooks/useTransactions";
+import { usePaginatedTransactions } from "../../hooks/usePaginatedTransactions";
+import Pagination from "../ui/Pagination";
+import TableRowSkeleton from "../ui/TableRowSkeleton";
+import TableRowErrorHandling from "../ui/TableRowErrorHandling";
+import TableRowNoData from "../ui/TableRowNoData";
+
+
 
 const TransactionTable = ({
   handleEditTransaction,
@@ -11,24 +16,10 @@ const TransactionTable = ({
   handleEditTransaction: (transaction: TransactionType) => void;
   handleDeleteTransaction: (transaction: TransactionType) => void;
 }) => {
-  const { data: dataTransactions, isLoading, error } = useTransactions(true);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const { data: paginatedResponse, isLoading, isError, refetch } = usePaginatedTransactions(page, limit);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px] bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-center" role="alert">
-        <strong className="font-bold">Error! </strong>
-        <span className="block sm:inline">Failed to load transactions data. Please try again later.</span>
-      </div>
-    );
-  }
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="overflow-x-auto">
@@ -58,43 +49,51 @@ const TransactionTable = ({
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {dataTransactions?.map((transaction) => (
-              <TransactionRow
-                key={transaction._id}
-                transaction={transaction}
-                handleEditTransaction={handleEditTransaction}
-                handleDeleteTransaction={handleDeleteTransaction}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
+          <tbody className="divide-y divide-gray-100">
+            {isLoading && <TableRowSkeleton columns={7} />}
 
-      {/* Pagination (Visual only for now) */}
-      <div className="bg-white px-6 py-4 border-t border-gray-200">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">{dataTransactions?.length ? 1 : 0}</span> to{" "}
-            <span className="font-medium">{dataTransactions?.length || 0}</span> of{" "}
-            <span className="font-medium">{dataTransactions?.length || 0}</span> results
-          </div>
-          <div className="flex space-x-2">
-            <button
-              disabled
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-300 bg-gray-50 cursor-not-allowed">
-              Previous
-            </button>
-            <button className="px-3 py-1 border border-blue-500 bg-blue-50 text-blue-600 rounded-md text-sm font-medium">
-              1
-            </button>
-            <button
-              disabled
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-300 bg-gray-50 cursor-not-allowed">
-              Next
-            </button>
-          </div>
-        </div>
+            {!isLoading && isError && (
+              <TableRowErrorHandling
+                col={7}
+                title="transactions"
+                refetch={refetch}
+              />
+            )}
+
+            {!isLoading &&
+              !isError &&
+              paginatedResponse?.data?.map((transaction) => (
+                <TransactionRow
+                  key={transaction._id}
+                  transaction={transaction}
+                  handleEditTransaction={handleEditTransaction}
+                  handleDeleteTransaction={handleDeleteTransaction}
+                />
+              ))}
+
+            {!isLoading && !isError && (!paginatedResponse?.data || paginatedResponse.data.length === 0) && (
+              <TableRowNoData title="transactions" col={7} />
+            )}
+          </tbody>
+
+          <tfoot>
+            <tr className="border-t border-gray-100">
+              <td colSpan={7} className="px-6 py-4">
+                <Pagination
+                  limit={limit}
+                  page={page}
+                  total={paginatedResponse?.total}
+                  totalPages={paginatedResponse?.totalPages}
+                  setPage={(newPage) => setPage(newPage)}
+                  setLimit={(newLimit) => {
+                    setLimit(newLimit);
+                    setPage(1);
+                  }}
+                />
+              </td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
     </div>
   );

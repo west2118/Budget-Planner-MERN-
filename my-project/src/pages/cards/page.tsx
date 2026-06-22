@@ -6,16 +6,21 @@ import SummaryCards from "../../components/cards/SummaryCards";
 import { useState } from "react";
 import FormDataCardModal from "../../components/cards/FormDataCardModal";
 import DeleteCardModal from "../../components/cards/DeleteCardModal";
-import { useUserStore } from "../../stores/useUserStore";
+import CardGridSkeleton from "../../components/ui/CardGridSkeleton";
+import GridErrorHandling from "../../components/ui/GridErrorHandling";
+import GridNoData from "../../components/ui/GridNoData";
+import Pagination from "../../components/ui/Pagination";
 
 const CardsPage = () => {
-  const token = useUserStore((state) => state.userToken);
   const [isEdit, setIsEdit] = useState(false);
   const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  const { data, error, isLoading } = useCards();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(6);
+
+  const { data, error, isLoading } = useCards(page, limit);
 
   const handleSelectCard = (card: CardType) => {
     setIsEdit(true);
@@ -53,32 +58,50 @@ const CardsPage = () => {
       </div>
 
       {/* Cards Grid */}
-      {isLoading ? (
-        <div className="flex items-center justify-center min-h-[200px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        </div>
-      ) : error ? (
-        <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-center" role="alert">
-          Failed to load cards.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-          {data?.map((card) => (
-            <CardsCard
-              key={card._id}
-              card={card}
-              handleSelectCard={handleSelectCard}
-              handleSelectedIdCard={handleSelectedIdCard}
-            />
-          ))}
-        </div>
+      {isLoading && <CardGridSkeleton />}
+
+      {!isLoading && error && <GridErrorHandling title="cards" />}
+
+      {!isLoading && !error && data && data.cards && data.cards.length > 0 && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+            {data.cards.map((card: CardType) => (
+              <CardsCard
+                key={card._id}
+                card={card}
+                handleSelectCard={handleSelectCard}
+                handleSelectedIdCard={handleSelectedIdCard}
+              />
+            ))}
+          </div>
+          {data.totalPages > 1 && (
+            <div className="mt-8">
+              <Pagination
+                limit={limit}
+                page={page}
+                total={data.total}
+                totalPages={data.totalPages}
+                setPage={setPage}
+                setLimit={setLimit}
+              />
+            </div>
+          )}
+        </>
+      )}
+
+      {!isLoading && !error && (!data || !data.cards || data.cards.length === 0) && (
+        <GridNoData
+          title="No cards yet"
+          message="Add your credit, debit, or cash cards to track your spending sources."
+          buttonText="Add New Card"
+          onAdd={() => setIsModalOpen(true)}
+        />
       )}
 
       {isModalOpen && (
         <FormDataCardModal
           isModalOpen={isModalOpen}
           isCloseModal={() => setIsModalOpen(false)}
-          token={token}
           isEdit={isEdit}
           selectedCard={selectedCard}
         />
@@ -86,7 +109,6 @@ const CardsPage = () => {
 
       {isDeleteModalOpen && (
         <DeleteCardModal
-          token={token}
           isModalOpen={isDeleteModalOpen}
           isCloseModal={() => setIsDeleteModalOpen(false)}
           selectedCard={selectedCard}

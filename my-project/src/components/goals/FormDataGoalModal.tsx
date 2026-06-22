@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { startTransition, useEffect, useTransition } from "react";
 import { useForm } from "../../hooks/useForm";
-import axios from "axios";
+import api from "../../lib/api";
 import { toast } from "react-toastify";
 import { categoriesGoal } from "../../lib/constants";
 import Modal from "../ui/Modal";
@@ -11,7 +11,6 @@ import DeleteModal from "../ui/DeleteModal";
 type FormDataGoalModalProps = {
   isModalOpen: boolean;
   isCloseModal: () => void;
-  token: string | null;
   selectedGoal: any;
   isEdit: boolean;
   isDelete: boolean;
@@ -29,7 +28,6 @@ type FormData = {
 const FormDataGoalModal = ({
   isModalOpen,
   isCloseModal,
-  token,
   isEdit,
   selectedGoal,
   isDelete,
@@ -57,30 +55,19 @@ const FormDataGoalModal = ({
   }, [selectedGoal]);
 
   const mutation = useMutation({
-    mutationFn: async (formData: FormData) => {
+    mutationFn: async (payload: FormData) => {
       let res;
 
       if (isEdit) {
         if (!selectedGoal) return;
 
-        res = await axios.put(
-          `http://localhost:8080/api/v1/goals/${selectedGoal?._id}`,
-          { formData },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        res = await api.put(`/goals/${selectedGoal._id}`, { formData: payload });
       } else if (isDelete) {
-        res = await axios.delete(
-          `http://localhost:8080/api/v1/goals/${selectedGoal?._id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        if (!selectedGoal) return;
+
+        res = await api.delete(`/goals/${selectedGoal._id}`);
       } else {
-        res = await axios.post("http://localhost:8080/api/v1/goals", formData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        res = await api.post("/goals", payload);
       }
 
       return res.data;
@@ -88,7 +75,7 @@ const FormDataGoalModal = ({
     onSuccess: (response) => {
       isCloseModal();
       toast.success(response.message);
-      queryClient.invalidateQueries({ queryKey: ["user-goals"] });
+      queryClient.invalidateQueries({ queryKey: ["goals-paginated"] });
     },
     onError: () => {
       toast.error("Something went wrong");

@@ -3,16 +3,28 @@ import User from "../../models/user.model.js";
 
 export const getUserCards = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
+    const { page, limit } = req.query;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
 
-    const cards = await Card.find({ userId: user._id });
+    if (page && limit) {
+      const pageNumber = parseInt(page, 10);
+      const limitNumber = parseInt(limit, 10);
+      const skip = (pageNumber - 1) * limitNumber;
 
-    res.status(200).json(cards);
+      const cards = await Card.find({ userId: user._id }).skip(skip).limit(limitNumber);
+      const totalCards = await Card.countDocuments({ userId: user._id });
+      const totalPages = Math.ceil(totalCards / limitNumber);
+
+      return res.status(200).json({ cards, totalPages, currentPage: pageNumber, total: totalCards });
+    } else {
+      const cards = await Card.find({ userId: user._id });
+      return res.status(200).json(cards);
+    }
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -20,9 +32,9 @@ export const getUserCards = async (req, res) => {
 
 export const getCardsSummary = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
@@ -51,10 +63,10 @@ export const getCardsSummary = async (req, res) => {
 
 export const postCard = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
     const { name, balance = 0, type, budgetLimit = null } = req.body;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
@@ -89,13 +101,13 @@ export const postCard = async (req, res) => {
 
 export const putCard = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
     const { id } = req.params;
     const { formData } = req.body;
 
     console.log(formData);
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
@@ -131,10 +143,10 @@ export const putCard = async (req, res) => {
 
 export const deleteCard = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
     const { id } = req.params;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }

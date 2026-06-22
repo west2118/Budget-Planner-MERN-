@@ -1,30 +1,33 @@
-import {
-  Download,
-  Edit,
-  Filter,
-  Plus,
-  Search,
-  Trash2,
-  Upload,
-} from "lucide-react";
+
 import SearchFilterCard from "../../components/transactions/SearchFilterCard";
 import FormDataTransaction from "../../components/transactions/FormDataTransactionModal";
-import { useState } from "react";
-import { useUserStore } from "../../stores/useUserStore";
-import { useQuery } from "@tanstack/react-query";
-import { fetchData } from "../../lib/utils";
+import SummaryCards from "../../components/dashboard/SummaryCards";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import TransactionTable from "../../components/transactions/TransactionTable";
 import type { TransactionType } from "../../lib/types";
 
 // Replaced static transaction data with dynamic fetch
 
 const TransactionsPage = () => {
-  const token = useUserStore((state) => state.userToken);
+  const location = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionType | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const [isDelete, setIsDelete] = useState(false);
+  const [defaultCardId, setDefaultCardId] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (location.state?.openAddModal) {
+      setIsModalOpen(true);
+      if (location.state.defaultCardId) {
+        setDefaultCardId(location.state.defaultCardId);
+      }
+      // Clear the state so a page refresh doesn't re-trigger the modal
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleEditTransaction = (transaction: TransactionType) => {
     setIsEdit(true);
@@ -43,6 +46,7 @@ const TransactionsPage = () => {
     setIsEdit(false);
     setIsDelete(false);
     setIsModalOpen(false);
+    setDefaultCardId(undefined);
   };
 
   return (
@@ -55,22 +59,11 @@ const TransactionsPage = () => {
         </p>
       </div>
 
+      {/* Summary Cards */}
+      <SummaryCards />
+
       {/* Search and Filter Bar */}
       <SearchFilterCard handleOpenAddModal={() => setIsModalOpen(true)} />
-
-      {/* Export/Import Buttons */}
-      <div className="flex justify-end items-center mb-4">
-        <div className="flex space-x-2">
-          <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">
-            <Download className="w-4 h-4" />
-            <span>Export</span>
-          </button>
-          <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">
-            <Upload className="w-4 h-4" />
-            <span>Import</span>
-          </button>
-        </div>
-      </div>
 
       {/* Transactions Table */}
       <TransactionTable
@@ -81,12 +74,12 @@ const TransactionsPage = () => {
       {/* Transaction Form Modal (Static) */}
       {isModalOpen && (
         <FormDataTransaction
-          token={token}
           isModalOpen={isModalOpen}
           isCloseModal={handleCloseTransaction}
           isEdit={isEdit}
           selectedTransaction={selectedTransaction}
           isDelete={isDelete}
+          defaultCardId={defaultCardId}
         />
       )}
     </div>

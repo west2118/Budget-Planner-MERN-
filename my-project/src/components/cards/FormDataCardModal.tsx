@@ -3,7 +3,7 @@ import { useEffect, useTransition } from "react";
 import ReactDOM from "react-dom";
 import { cardType } from "../../lib/constants";
 import { useForm } from "../../hooks/useForm";
-import axios from "axios";
+import api from "../../lib/api";
 import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CardType } from "../../lib/types";
@@ -11,7 +11,6 @@ import type { CardType } from "../../lib/types";
 type FormDataCardModalProps = {
   isModalOpen: boolean;
   isCloseModal: () => void;
-  token: string | null;
   isEdit: boolean;
   selectedCard: CardType | null;
 };
@@ -26,7 +25,6 @@ type FormData = {
 const FormDataCardModal = ({
   isModalOpen,
   isCloseModal,
-  token,
   isEdit,
   selectedCard,
 }: FormDataCardModalProps) => {
@@ -67,17 +65,9 @@ const FormDataCardModal = ({
       if (isEdit) {
         if (!selectedCard) return;
 
-        res = await axios.put(
-          `http://localhost:8080/api/v1/cards/${selectedCard?._id}`,
-          { formData },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        res = await api.put(`/cards/${selectedCard?._id}`, formData);
       } else {
-        res = await axios.post("http://localhost:8080/api/v1/cards", formData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        res = await api.post("/cards", formData);
       }
 
       return res.data;

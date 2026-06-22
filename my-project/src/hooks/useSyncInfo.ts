@@ -1,53 +1,28 @@
-import axios from "axios";
+import { useEffect, useRef } from "react";
+import api from "../lib/api";
 import { useUserStore } from "../stores/useUserStore";
-import { useEffect } from "react";
-import { auth } from "../lib/firebase";
 
 export const useSyncInfo = () => {
-  const setUserToken = useUserStore((state) => state.setUserToken);
   const setUser = useUserStore((state) => state.setUser);
-  const clearUser = useUserStore((state) => state.clearUser);
+  const user = useUserStore((state) => state.user);
+
+  const hasFetched = useRef(false);
 
   useEffect(() => {
-    const fetchUserInfo = async (token: string) => {
+    const fetchUserInfo = async () => {
+      if (hasFetched.current) return;
+      hasFetched.current = true;
+      
       try {
-        const response = await axios.get("http://localhost:8080/api/v1/user", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
+        const response = await api.get("/user");
         setUser(response?.data);
       } catch (error) {
-        clearUser();
+        // Interceptor handles 401 refresh, or user is simply not logged in
       }
     };
 
-    const syncAuth = async () => {
-      const user = auth.currentUser;
-      if (!user) {
-        clearUser();
-        return;
-      }
-
-      const token = await user.getIdToken();
-      setUserToken(token);
-      await fetchUserInfo(token);
-    };
-
-    syncAuth();
-
-    const unsubscribe = auth.onIdTokenChanged(async (user) => {
-      const newToken = await user?.getIdToken();
-      setUserToken(newToken ?? null);
-
-      if (newToken) {
-        await fetchUserInfo(newToken);
-      } else {
-        clearUser();
-      }
-    });
-
-    return () => unsubscribe();
-  }, [setUserToken, setUser, clearUser]);
+    if (!user) {
+      fetchUserInfo();
+    }
+  }, [user, setUser]);
 };

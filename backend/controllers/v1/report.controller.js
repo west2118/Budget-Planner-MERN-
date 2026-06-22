@@ -3,10 +3,10 @@ import User from "../../models/user.model.js";
 
 export const getReportSummary = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
     const { startDate, endDate } = req.query;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
@@ -48,10 +48,10 @@ export const getReportSummary = async (req, res) => {
 
 export const getReportCharts = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
     const { startDate, endDate, reportType = "Monthly" } = req.query;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }

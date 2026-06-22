@@ -3,10 +3,10 @@ import User from "../../models/user.model.js";
 
 export const getAllUserGoals = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
     const { page = 1, limit = 6, status = "all" } = req.query;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
@@ -35,9 +35,9 @@ export const getAllUserGoals = async (req, res) => {
 
 export const getUserGoals = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
@@ -53,9 +53,39 @@ export const getUserGoals = async (req, res) => {
   }
 };
 
+export const getGoalsSummary = async (req, res) => {
+  try {
+    const { _id } = req.user;
+    const user = await User.findById(_id);
+    if (!user) {
+      return res.status(400).json({ message: "User didn't exist" });
+    }
+
+    const goals = await Goal.find({ userId: user._id });
+
+    const totalGoals = goals.length;
+    const totalCompleted = goals.filter((goal) => goal.targetAmount <= goal.currentAmount).length;
+    const totalTarget = goals.reduce((acc, t) => acc + t.targetAmount, 0);
+    const totalSaved = goals.reduce((acc, t) => acc + t.currentAmount, 0);
+    const totalRemaining = totalTarget > totalSaved ? totalTarget - totalSaved : 0;
+    const overallProgress = totalTarget > 0 ? Math.min(100, Math.round((totalSaved / totalTarget) * 100)) : 0;
+
+    res.status(200).json({
+      totalGoals,
+      totalCompleted,
+      totalTarget,
+      totalSaved,
+      totalRemaining,
+      overallProgress,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 export const postGoal = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
     const {
       title,
       category,
@@ -65,7 +95,7 @@ export const postGoal = async (req, res) => {
       description,
     } = req.body;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
@@ -99,11 +129,11 @@ export const postGoal = async (req, res) => {
 
 export const putGoal = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
     const { id } = req.params;
     const { formData } = req.body;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
@@ -126,10 +156,10 @@ export const putGoal = async (req, res) => {
 
 export const deleteGoal = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
     const { id } = req.params;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }

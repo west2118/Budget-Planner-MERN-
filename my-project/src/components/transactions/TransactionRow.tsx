@@ -23,11 +23,10 @@ const TransactionRow = ({
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            transaction.type === "Income"
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}>
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${transaction.type === "Income"
+            ? "bg-green-100 text-green-800"
+            : "bg-red-100 text-red-800"
+            }`}>
           {transaction.type}
         </span>
       </td>
@@ -44,13 +43,13 @@ const TransactionRow = ({
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-        {transaction.cardId.name}
+        {transaction.cardId?.name || "———"}
       </td>
       <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
         {transaction.note?.trim() || "———"}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-        <div className="flex space-x-2">
+        <div className="flex space-x-4">
           <button
             onClick={() => handleEditTransaction(transaction)}
             className="text-blue-600 hover:text-blue-900 transition-colors">

@@ -38,9 +38,6 @@ const ReportsPage = () => {
 
       {/* Charts Section */}
       <ChartsSection filters={filters} />
-
-      {/* Insights Section */}
-      <Insights />
     </div>
   );
 };

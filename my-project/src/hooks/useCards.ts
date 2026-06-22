@@ -1,25 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "../lib/api";
-import { useUserStore } from "../stores/useUserStore";
+import type { CardType, PaginatedCardsResponse } from "../lib/types";
 
-export type CardType = {
-  _id: string;
-  name: string;
-  balance: number;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export const useCards = () => {
-  const token = useUserStore((state) => state.userToken);
-
-  return useQuery<CardType[]>({
-    queryKey: ["cards"],
+export const useCards = (page?: number, limit?: number) => {
+  return useQuery<PaginatedCardsResponse>({
+    queryKey: page && limit ? ["cards", page, limit] : ["cards"],
     queryFn: async () => {
-      const response = await api.get("/cards");
+      const params: any = {};
+      if (page && limit) {
+        params.page = page;
+        params.limit = limit;
+      }
+      const response = await api.get("/cards", { params });
       return response.data;
     },
-    enabled: !!token,
   });
 };

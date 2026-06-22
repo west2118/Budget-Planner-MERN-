@@ -9,24 +9,24 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-type MonthlyData = {
-  month: string;
+type BarData = {
+  name: string;
   Income: number;
   Expense: number;
 };
 
 const IncomeExpenseBarChart = ({
-  monthlyTotalsData,
+  barChartData,
   isMobile,
 }: {
-  monthlyTotalsData: MonthlyData[];
+  barChartData: BarData[];
   isMobile: boolean;
 }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={monthlyTotalsData}>
+      <BarChart data={barChartData}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="month" fontSize={isMobile ? 12 : 14} />
+        <XAxis dataKey="name" fontSize={isMobile ? 12 : 14} />
         <YAxis fontSize={isMobile ? 12 : 14} />
         <Tooltip />
         <Legend />

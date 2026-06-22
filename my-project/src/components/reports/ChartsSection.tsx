@@ -32,7 +32,7 @@ const ChartsSection = ({ filters }: ChartsSectionProps) => {
         <ExpenseCategoryChart data={data?.expenseCategoryData} />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-4">
         <SpendingTrendChart data={data?.spendingTrendData} />
         <TopSpendingCategories data={data?.topSpending} />
       </div>

@@ -4,29 +4,13 @@ import Transaction from "../../models/transaction.model.js";
 import User from "../../models/user.model.js";
 import { getIncomeVsExpenses } from "../../services/transactionService.js";
 
-export const getAllUserTransactions = async (req, res) => {
-  try {
-    const { uid } = req.user;
 
-    const user = await User.findOne({ uid });
-    if (!user) {
-      return res.status(400).json({ message: "User didn't exist" });
-    }
-
-    const transactions = await Transaction.find({ userId: user._id });
-
-    res.status(201).json(transactions);
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
 
 export const getUserReportTransactions = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
@@ -42,19 +26,40 @@ export const getUserReportTransactions = async (req, res) => {
 
 export const getUserTransactions = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
+    const { page, limit, populated } = req.query;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
 
-    const transactions = await Transaction.find({ userId: user._id }).populate(
-      "cardId",
-      "name"
-    );
+    let query = Transaction.find({ userId: user._id });
+    
+    if (populated === 'true') {
+      query = query.populate("cardId", "name");
+    }
 
-    res.status(201).json(transactions);
+    if (page && limit) {
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const transactions = await query
+        .sort({ date: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit));
+      
+      const total = await Transaction.countDocuments({ userId: user._id });
+
+      return res.status(200).json({
+        data: transactions,
+        total,
+        totalPages: Math.ceil(total / parseInt(limit)),
+        currentPage: parseInt(page)
+      });
+    }
+
+    const transactions = await query.sort({ date: -1, createdAt: -1 });
+
+    res.status(200).json(transactions);
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: "Server error", error: error.message });
@@ -63,10 +68,10 @@ export const getUserTransactions = async (req, res) => {
 
 export const postTransaction = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
     const { cardId, goalId, type, amount, category, date, note } = req.body;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
@@ -114,11 +119,11 @@ export const postTransaction = async (req, res) => {
 
 export const putTransaction = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
     const { id } = req.params;
     const { formData } = req.body;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
@@ -188,10 +193,10 @@ export const putTransaction = async (req, res) => {
 
 export const deleteTransaction = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
     const { id } = req.params;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
@@ -239,9 +244,9 @@ export const deleteTransaction = async (req, res) => {
 
 export const getTransactionSummary = async (req, res) => {
   try {
-    const { uid } = req.user;
+    const { _id } = req.user;
 
-    const user = await User.findOne({ uid });
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(400).json({ message: "User didn't exist" });
     }
@@ -266,6 +271,73 @@ export const getTransactionSummary = async (req, res) => {
     const balance = income - expense;
 
     res.status(200).json({ income, expense, balance });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const getDashboardCharts = async (req, res) => {
+  try {
+    const { _id } = req.user;
+    const user = await User.findById(_id);
+    if (!user) {
+      return res.status(400).json({ message: "User didn't exist" });
+    }
+
+    // 1. Category Counts for Pie Chart (Expenses only)
+    const categoryCountsResult = await Transaction.aggregate([
+      { $match: { userId: user._id, type: "Expense" } },
+      { $group: { _id: "$category", total: { $sum: "$amount" } } }
+    ]);
+
+    const categoryCountsData = {};
+    categoryCountsResult.forEach(item => {
+      if (item._id) {
+        categoryCountsData[item._id] = item.total;
+      }
+    });
+
+    // 2. Income vs Expense for Bar Chart (Last 7 Days)
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const now = new Date();
+    const days = [];
+    const totalsMap = {};
+
+    // Generate the past 7 days, from 6 days ago up to today
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`; // "YYYY-MM-DD"
+      const dayName = dayNames[d.getDay()];
+      
+      days.push(dateString);
+      totalsMap[dateString] = { name: dayName, Income: 0, Expense: 0 };
+    }
+
+    const startDateString = days[0]; // 6 days ago
+
+    // Fetch transactions from the last 7 days
+    const recentTransactions = await Transaction.find({
+      userId: user._id,
+      date: { $gte: startDateString }
+    });
+
+    recentTransactions.forEach(t => {
+      if (!t.date) return;
+      const tDate = new Date(t.date).toISOString().split("T")[0]; // Handle Date object correctly
+      if (totalsMap[tDate]) {
+        if (t.type === "Income") totalsMap[tDate].Income += Number(t.amount);
+        if (t.type === "Expense") totalsMap[tDate].Expense += Number(t.amount);
+      }
+    });
+
+    const barChartData = Object.values(totalsMap);
+
+    res.status(200).json({ categoryCountsData, barChartData });
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: "Server error", error: error.message });

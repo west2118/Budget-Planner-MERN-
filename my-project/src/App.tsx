@@ -16,6 +16,7 @@ import TransactionsPage from "./pages/transactions/page";
 import ReportsPage from "./pages/reports/page";
 import GoalsPage from "./pages/goals/page";
 import CardsPage from "./pages/cards/page";
+import BudgetsPage from "./pages/budgets/page";
 import SettingsPage from "./pages/settings/page";
 import { useSyncInfo } from "./hooks/useSyncInfo";
 
@@ -34,6 +35,7 @@ const router = createBrowserRouter(
         <Route path="reports" element={<ReportsPage />} />
         <Route path="goals" element={<GoalsPage />} />
         <Route path="cards" element={<CardsPage />} />
+        <Route path="budgets" element={<BudgetsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
     </>

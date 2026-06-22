@@ -5,7 +5,7 @@ type StatCardProps = {
   title: string;
   total: number | string;
   icon: LucideIcon;
-  trend?: "up" | "down";
+  trend?: "up" | "down" | "neutral";
   color: string;
   bgColor: string;
   extraInfo?: string | React.ReactNode;
@@ -31,15 +31,14 @@ const StatCard = ({
             {prefix}
             {typeof total === "number"
               ? total.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })
               : total}
           </p>
           <p
-            className={`text-xs lg:text-sm mt-1 flex items-center ${
-              trend === "up" ? "text-green-500" : trend === "down" ? "text-red-500" : "text-gray-500"
-            }`}>
+            className={`text-xs lg:text-sm mt-1 flex items-center ${trend === "up" ? "text-green-500" : trend === "down" ? "text-red-500" : "text-gray-500"
+              }`}>
             {extraInfo}
           </p>
         </div>

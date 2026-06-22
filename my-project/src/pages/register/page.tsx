@@ -3,10 +3,9 @@ import { useState, useTransition } from "react";
 import PreviewSectionAuth from "../../components/PreviewSectionAuth";
 import { useForm } from "../../hooks/useForm";
 import { toast } from "react-toastify";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../lib/firebase";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useUserStore } from "../../stores/useUserStore";
 
 type FormData = {
   firstName: string;
@@ -48,30 +47,17 @@ const RegisterPage = () => {
 
     startTransition(async () => {
       try {
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          formData.email,
-          formData.password
-        );
+        const response = await axios.post("http://localhost:8080/api/v1/auth/register", {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+        }, { withCredentials: true });
 
-        const token = await userCredential.user.getIdToken();
-
-        const response = await axios.post(
-          "http://localhost:8080/api/v1/user",
-          {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: formData.email,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        useUserStore.getState().setUser(response.data.user);
 
         navigate("/dashboard");
-        toast.success(response?.data?.message);
+        toast.success(response.data.message);
       } catch (error: any) {
         toast.error(error.response?.data?.message || error.message);
       }

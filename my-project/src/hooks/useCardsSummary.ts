@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "../lib/api";
-import { useUserStore } from "../stores/useUserStore";
 
 type CardsSummaryResponse = {
   totalBalance: number;
@@ -11,7 +10,6 @@ type CardsSummaryResponse = {
 };
 
 export const useCardsSummary = () => {
-  const token = useUserStore((state) => state.userToken);
 
   return useQuery<CardsSummaryResponse>({
     queryKey: ["cards-summary"],
@@ -19,6 +17,5 @@ export const useCardsSummary = () => {
       const response = await api.get("/cards/summary");
       return response.data;
     },
-    enabled: !!token,
   });
 };

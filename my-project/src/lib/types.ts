@@ -21,13 +21,20 @@ export type CardType = {
   __v: number;
 };
 
+export type PaginatedCardsResponse = {
+  cards: CardType[];
+  totalPages: number;
+  currentPage: number;
+  total: number;
+};
+
 export type TransactionType = {
   _id: string;
   userId: string;
   cardId: {
     _id: string;
     name: string;
-  };
+  } | null;
   goalId: string | null;
   amount: number;
   category: string;
@@ -51,4 +58,19 @@ export type GoalType = {
   createdAt: string;
   updatedAt: string;
   __v: number;
+};
+
+
+export type BudgetType = {
+  _id: string;
+  userId: string;
+  budgetName: string;
+  category: string;
+  amount: number;
+  period: "Weekly" | "Monthly" | "Yearly" | "One-Time";
+  cardSelection?: "All Cards" | "Selected Cards Only";
+  selectedCards?: string[];
+  spentAmount: number; // dynamically added in backend
+  createdAt: string;
+  updatedAt: string;
 };

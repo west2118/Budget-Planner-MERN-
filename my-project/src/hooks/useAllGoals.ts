@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "../lib/api";
-import { useUserStore } from "../stores/useUserStore";
 import type { GoalType } from "../lib/types";
 
 type PaginatedGoalsResponse = {
@@ -10,7 +9,6 @@ type PaginatedGoalsResponse = {
 };
 
 export const useAllGoals = (page: number, limit: number, status: string) => {
-  const token = useUserStore((state) => state.userToken);
 
   return useQuery<PaginatedGoalsResponse>({
     queryKey: ["goals-paginated", page, limit, status],
@@ -20,6 +18,5 @@ export const useAllGoals = (page: number, limit: number, status: string) => {
       });
       return response.data;
     },
-    enabled: !!token,
   });
 };

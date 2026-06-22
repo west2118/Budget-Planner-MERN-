@@ -1,9 +1,43 @@
-import { Lock, Mail, Key, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { Lock, Mail, Key, Eye, EyeOff, Loader } from "lucide-react";
+import { useState, useTransition } from "react";
 import PreviewSectionAuth from "../../components/PreviewSectionAuth";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useForm } from "../../hooks/useForm";
+import { useUserStore } from "../../stores/useUserStore";
+import axios from "axios";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const navigate = useNavigate();
+
+  const { formData, handleChange } = useForm({
+    email: "",
+    password: "",
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!formData.email || !formData.password) {
+      return toast.error("Please fill in all fields");
+    }
+
+    startTransition(async () => {
+      try {
+        const response = await axios.post("http://localhost:8080/api/v1/auth/login", {
+          email: formData.email,
+          password: formData.password,
+        }, { withCredentials: true });
+
+        useUserStore.getState().setUser(response.data.user);
+        toast.success(response.data.message || "Login successful!");
+        navigate("/dashboard");
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || error.message);
+      }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 to-purple-50 flex">
@@ -21,7 +55,7 @@ const LoginPage = () => {
           {/* Auth Card */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
             {/* Login Form */}
-            <form className="space-y-6 mb-6">
+            <form onSubmit={handleSubmit} className="space-y-6 mb-6">
               <div>
                 <label
                   htmlFor="email"
@@ -33,6 +67,9 @@ const LoginPage = () => {
                   <input
                     type="email"
                     id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     placeholder="you@example.com"
                   />
@@ -50,6 +87,9 @@ const LoginPage = () => {
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
                     className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     placeholder="Enter your password"
                   />
@@ -88,15 +128,18 @@ const LoginPage = () => {
               </div>
 
               <button
+                disabled={isPending}
                 type="submit"
-                className="w-full bg-linear-to-br from-blue-500 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-lg hover:shadow-xl font-semibold">
-                Sign in to your account
+                className="w-full bg-linear-to-br from-blue-500 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-lg hover:shadow-xl font-semibold flex items-center justify-center space-x-2">
+                {isPending && <Loader className="animate-spin h-5 w-5" />}
+                <span>Sign in to your account</span>
               </button>
 
               <p className="text-center text-gray-600">
                 Don't have an account?{" "}
                 <button
                   type="button"
+                  onClick={() => navigate("/register")}
                   className="text-blue-600 hover:text-blue-700 font-semibold transition-colors">
                   Sign up
                 </button>

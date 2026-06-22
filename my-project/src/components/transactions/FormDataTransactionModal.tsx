@@ -1,6 +1,6 @@
 import { startTransition, useEffect, useState, useTransition } from "react";
 import { useForm } from "../../hooks/useForm";
-import axios from "axios";
+import api from "../../lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import type { CardType, GoalType, TransactionType } from "../../lib/types";
@@ -8,16 +8,15 @@ import Modal from "../ui/Modal";
 import DeleteModal from "../ui/DeleteModal";
 import { Loader } from "lucide-react";
 import { categories } from "../../lib/constants";
-import { useCards } from "../../hooks/useCards";
-import { useGoals } from "../../hooks/useGoals";
+import { useTransactionFormData } from "../../hooks/useTransactionFormData";
 
 type FormDataTransactionProps = {
   isModalOpen: boolean;
   isCloseModal: () => void;
-  token: string | null;
   isEdit: boolean;
   selectedTransaction: TransactionType | null;
   isDelete?: boolean;
+  defaultCardId?: string;
 };
 
 type FormData = {
@@ -33,14 +32,15 @@ type FormData = {
 const FormDataTransaction = ({
   isModalOpen,
   isCloseModal,
-  token,
   isEdit,
   selectedTransaction,
   isDelete = false,
+  defaultCardId,
 }: FormDataTransactionProps) => {
   const queryClient = useQueryClient();
-  const { data: dataCards } = useCards();
-  const { data: dataGoals } = useGoals();
+  const { data: formDataOptions } = useTransactionFormData();
+  const dataCards = formDataOptions?.cards || [];
+  const dataGoals = formDataOptions?.goals || [];
   const [isPending, startTransition] = useTransition();
   const { formData, handleChange, setField } = useForm<FormData>({
     cardId: "",
@@ -53,16 +53,18 @@ const FormDataTransaction = ({
   });
 
   useEffect(() => {
-    if (!selectedTransaction) return;
-
-    setField("cardId", selectedTransaction?.cardId || "");
-    setField("goalId", selectedTransaction?.goalId || "");
-    setField("type", selectedTransaction?.type || "");
-    setField("amount", selectedTransaction?.amount || 0);
-    setField("category", selectedTransaction?.category || "");
-    setField("date", selectedTransaction?.date.toString().split("T")[0] || "");
-    setField("note", selectedTransaction?.note || "");
-  }, [selectedTransaction]);
+    if (selectedTransaction) {
+      setField("cardId", selectedTransaction?.cardId || "");
+      setField("goalId", selectedTransaction?.goalId || "");
+      setField("type", selectedTransaction?.type || "");
+      setField("amount", selectedTransaction?.amount || 0);
+      setField("category", selectedTransaction?.category || "");
+      setField("date", selectedTransaction?.date.toString().split("T")[0] || "");
+      setField("note", selectedTransaction?.note || "");
+    } else if (!isEdit && defaultCardId) {
+      setField("cardId", defaultCardId);
+    }
+  }, [selectedTransaction, defaultCardId, isEdit]);
 
   const mutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -77,30 +79,13 @@ const FormDataTransaction = ({
       if (isEdit) {
         if (!selectedTransaction) return;
 
-        res = await axios.put(
-          `http://localhost:8080/api/v1/transaction/${selectedTransaction?._id}`,
-          { formData: payload },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        res = await api.put(`/transactions/${selectedTransaction._id}`, { formData: payload });
       } else if (isDelete) {
         if (!selectedTransaction) return;
 
-        res = await axios.delete(
-          `http://localhost:8080/api/v1/transaction/${selectedTransaction?._id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        res = await api.delete(`/transactions/${selectedTransaction._id}`);
       } else {
-        res = await axios.post(
-          "http://localhost:8080/api/v1/transaction",
-          payload,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        res = await api.post("/transactions", payload);
       }
       return res.data;
     },
@@ -110,6 +95,9 @@ const FormDataTransaction = ({
 
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["transaction-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-charts"] });
     },
     onError: () => {
       toast.error("Something went wrong");

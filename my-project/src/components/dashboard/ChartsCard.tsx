@@ -3,15 +3,14 @@ import type { TransactionType } from "../../lib/types";
 import { monthNames } from "../../lib/constants";
 import SpendingPieChart from "./SpendingPieChart";
 import IncomeExpenseBarChart from "./IncomeExpenseBarChart";
-import { useCategoryCounts, useMonthlyTotals } from "../../lib/utils";
-import { useTransactions } from "../../hooks/useTransactions";
+import { useDashboardCharts } from "../../hooks/useDashboardCharts";
 
 const ChartsCard = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
-  const { data: transactions, isLoading, error } = useTransactions();
+  const { data: chartsData, isLoading, error } = useDashboardCharts();
 
-  const categoryCountsData = useCategoryCounts(transactions ?? null);
-  const monthlyTotalsData = useMonthlyTotals(transactions ?? null);
+  const categoryCountsData = chartsData?.categoryCountsData || {};
+  const barChartData = chartsData?.barChartData || [];
 
   if (isLoading) {
     return (
@@ -32,6 +31,19 @@ const ChartsCard = () => {
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
+      {/* Income vs Expense Bar Chart */}
+      <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Income vs Expense
+        </h3>
+        <div className="h-64 sm:h-72 lg:h-80">
+          <IncomeExpenseBarChart
+            barChartData={barChartData}
+            isMobile={isMobile}
+          />
+        </div>
+      </div>
+
       {/* Spending by Category Pie Chart */}
       <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 border border-gray-100">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -40,19 +52,6 @@ const ChartsCard = () => {
         <div className="h-64 sm:h-72 lg:h-80">
           <SpendingPieChart
             categoryCountsData={categoryCountsData}
-            isMobile={isMobile}
-          />
-        </div>
-      </div>
-
-      {/* Income vs Expense Bar Chart */}
-      <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Income vs Expense
-        </h3>
-        <div className="h-64 sm:h-72 lg:h-80">
-          <IncomeExpenseBarChart
-            monthlyTotalsData={monthlyTotalsData}
             isMobile={isMobile}
           />
         </div>
